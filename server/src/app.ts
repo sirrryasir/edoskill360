@@ -1,8 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
+import skillRoutes from "./routes/skillRoutes";
+import taskRoutes from "./routes/taskRoutes";
+import jobRoutes from "./routes/jobRoutes";
 import { protect } from "./middleware/authMiddleware";
 
 dotenv.config();
@@ -12,10 +17,20 @@ connectDB();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Allow frontend
+    credentials: true, // Allow cookies
+  })
+);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/skills", skillRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/jobs", jobRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
