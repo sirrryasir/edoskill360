@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 import Task from "../models/Task";
 import Skill from "../models/Skill";
 import TaskResult from "../models/TaskResult";
@@ -133,9 +134,6 @@ export const deleteTask = async (req: Request, res: Response) => {
   }
 };
 
-// @desc    Submit task answers and calculate score
-// @route   POST /api/tasks/:id/submit
-// @access  Private/Worker
 export const submitTask = async (req: any, res: Response) => {
   try {
     const { answers } = req.body; // [{ questionIndex: 0, selectedOption: 1 }]
@@ -145,40 +143,95 @@ export const submitTask = async (req: any, res: Response) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    let score = 0;
+    // 1. Calculate Score (Raw points)
+    let rawScore = 0;
     const gradedAnswers = answers.map((ans: any) => {
       const question = task.questions[ans.questionIndex];
+      // Safety check
+      if (!question) return { ...ans, isCorrect: false };
+
       const isCorrect = question.correctOption === ans.selectedOption;
-      if (isCorrect) score += task.maxScore / task.questions.length;
+      if (isCorrect) rawScore += task.maxScore / task.questions.length;
       return { ...ans, isCorrect };
     });
 
-    const passed = score >= task.maxScore * 0.7; // 70% passing grade
+    const score = Math.round(rawScore);
+    const percentageScore = (score / task.maxScore) * 100;
+    const passed = percentageScore >= 60; // Pass threshold for this specific task instance
 
+    // 2. Save TaskResult
     const result = await TaskResult.create({
       taskId: task._id,
       userId: req.user._id,
-      score: Math.round(score),
+      score: score,
       maxScore: task.maxScore,
       passed,
       answers: gradedAnswers,
     });
 
-    // If passed, verify the skill for the user
-    if (passed) {
-      // Import UserSkill dynamically or at top if not circular
-      // For now assuming we can update UserSkill here
-      const UserSkill = (await import("../models/UserSkill")).default;
+    // 3. Aggregate for Verification Logic
+    // Find all results for this user & this skill to calculate average
+    const aggregation = await TaskResult.aggregate([
+      {
+        $lookup: {
+          from: "tasks",
+          localField: "taskId",
+          foreignField: "_id",
+          as: "taskInfo",
+        },
+      },
+      { $unwind: "$taskInfo" },
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.user._id),
+          "taskInfo.skillId": task.skillId, // Match by skillId
+        },
+      },
+      {
+        $project: {
+          percentage: {
+            $multiply: [{ $divide: ["$score", "$maxScore"] }, 100],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          avgScore: { $avg: "$percentage" },
+          attempts: { $sum: 1 },
+        },
+      },
+    ]);
 
-      await UserSkill.findOneAndUpdate(
-        { userId: req.user._id, skillId: task.skillId },
-        { verified: true, score: Math.round(score) },
-        { upsert: true, new: true }
-      );
-    }
+    const stats = aggregation[0] || { avgScore: 0, attempts: 0 };
+    const newAverageScore = Math.round(stats.avgScore);
+    const totalAttempts = stats.attempts;
 
-    res.json(result);
+    // Defines Verification Criteria: Avg >= 70% AND Attempts >= 2
+    const isVerified = newAverageScore >= 70 && totalAttempts >= 2;
+
+    // 4. Update UserSkill
+    const UserSkill = (await import("../models/UserSkill")).default;
+
+    await UserSkill.findOneAndUpdate(
+      { userId: req.user._id, skillId: task.skillId },
+      {
+        score: newAverageScore,
+        verified: isVerified,
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      ...result.toObject(),
+      verificationUpdate: {
+        newAverageScore,
+        isVerified,
+        totalAttempts,
+      },
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: (error as Error).message });
   }
 };

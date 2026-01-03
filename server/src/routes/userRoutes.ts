@@ -3,6 +3,7 @@ import {
   getUserProfile,
   updateUserProfile,
   getWorkers,
+  getUserById,
 } from "../controllers/userController";
 import {
   registerUser,
@@ -21,6 +22,7 @@ router
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
 
-router.get("/workers", protect, getWorkers);
+router.get("/workers", getWorkers);
+router.route("/:id").get(getUserById);
 
 export default router;

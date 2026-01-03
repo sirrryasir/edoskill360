@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000", // Allow frontend
+    origin: ["http://localhost:3000", "https://edoskill360.vercel.app"],
     credentials: true, // Allow cookies
   })
 );

@@ -40,6 +40,26 @@ export const getJobs = async (req: Request, res: Response) => {
   }
 };
 
+// @desc    Get job by ID
+// @route   GET /api/jobs/:id
+// @access  Public
+export const getJobById = async (req: Request, res: Response) => {
+  try {
+    const job = await Job.findById(req.params.id).populate(
+      "employerId",
+      "name companyName bio location"
+    );
+
+    if (job) {
+      res.json(job);
+    } else {
+      res.status(404).json({ message: "Job not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
 // @desc    Get employer's jobs
 // @route   GET /api/jobs/my-jobs
 // @access  Private/Employer

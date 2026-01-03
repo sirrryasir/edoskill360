@@ -15,7 +15,12 @@ import {
   Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useState } from "react";
 
 interface SidebarLink {
@@ -33,23 +38,27 @@ export function Sidebar() {
 
   const roleLinks: Record<string, SidebarLink[]> = {
     worker: [
-      { href: "/dashboard/worker", label: "Overview", icon: LayoutDashboard },
-      { href: "/dashboard/worker/jobs", label: "Find Jobs", icon: Briefcase }, // Assuming this route exists or will exist
+      { href: "/dashboard/worker", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/jobs", label: "Find Jobs", icon: Briefcase },
       {
-        href: "/dashboard/worker/skills",
+        href: "/dashboard/worker?tab=skills",
         label: "My Skills",
         icon: CheckCircle,
       },
-      { href: "/dashboard/worker/profile", label: "Profile", icon: User },
+      { href: "/profile/me", label: "Public Profile", icon: User },
     ],
     employer: [
-      { href: "/dashboard/employer", label: "Overview", icon: LayoutDashboard },
       {
-        href: "/dashboard/employer/post-job",
+        href: "/dashboard/employer",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        href: "/dashboard/employer?tab=post-job",
         label: "Post a Job",
         icon: FileText,
       },
-      { href: "/dashboard/employer/talent", label: "Find Talent", icon: User },
+      { href: "/freelancers", label: "Find Talent", icon: User },
     ],
     admin: [
       { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
@@ -136,6 +145,7 @@ export function Sidebar() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 border-r w-72">
+            <SheetTitle className="sr-only">Sidebar Navigation</SheetTitle>
             <NavContent />
           </SheetContent>
         </Sheet>

@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import User from "../models/User";
+import UserSkill from "../models/UserSkill";
+import Feedback from "../models/Feedback";
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -20,6 +22,39 @@ export const getUserProfile = async (req: Request, res: Response) => {
     });
   } else {
     res.status(404).json({ message: "User not found" });
+  }
+};
+
+// @desc    Get public user profile by ID (for Profile Page)
+// @route   GET /api/users/:id
+// @access  Public
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (user) {
+      // Fetch User Skills
+      const skills = await UserSkill.find({ userId: user._id }).populate(
+        "skillId",
+        "name category"
+      );
+
+      // Fetch Feedback
+      const reviews = await Feedback.find({ workerId: user._id }).populate(
+        "employerId",
+        "name"
+      );
+
+      res.json({
+        ...user.toObject(),
+        skills,
+        reviews,
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
   }
 };
 
