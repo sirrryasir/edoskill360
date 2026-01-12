@@ -5,7 +5,10 @@ export interface ITask extends Document {
   title: string;
   description: string;
   difficulty: "easy" | "medium" | "hard";
-  questions: {
+  submissionType: "quiz" | "file" | "text" | "link";
+  type: "static" | "ai-generated";
+  instructions?: string;
+  questions?: {
     question: string;
     options: string[];
     correctOption: number; // Index of the correct option
@@ -29,6 +32,19 @@ const TaskSchema: Schema = new Schema(
       enum: ["easy", "medium", "hard"],
       default: "medium",
     },
+    // New fields for Proof-Based Tasks
+    submissionType: {
+      type: String,
+      enum: ["quiz", "file", "text", "link"],
+      default: "quiz",
+    },
+    type: {
+      type: String,
+      enum: ["static", "ai-generated"],
+      default: "static",
+    },
+    instructions: { type: String }, // For file/text/link tasks
+
     questions: [
       {
         question: { type: String, required: true },

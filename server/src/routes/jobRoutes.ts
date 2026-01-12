@@ -5,12 +5,15 @@ import {
   getMyJobs,
   getJobById,
 } from "../controllers/jobController";
-import { protect } from "../middleware/authMiddleware";
+import { protect, employer } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.route("/").get(getJobs).post(protect, createJob);
+router.route("/").get(getJobs).post(protect, employer, createJob);
 
-router.route("/:id").get(getJobById);
+// Specific routes first
 router.route("/my-jobs").get(protect, getMyJobs);
+
+// Dynamic routes last
+router.route("/:id").get(getJobById);
 export default router;

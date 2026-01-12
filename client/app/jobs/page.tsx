@@ -22,6 +22,11 @@ import { usePublicDataStore } from "@/store/usePublicDataStore";
 export default function JobsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { jobs, fetchJobs, isLoading } = usePublicDataStore();
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 6);
+  };
 
   useEffect(() => {
     fetchJobs();
@@ -164,36 +169,42 @@ export default function JobsPage() {
                 Loading jobs...
               </div>
             ) : jobs.length > 0 ? (
-              jobs.map((job) => (
-                <JobCard
-                  key={job._id}
-                  id={job._id}
-                  title={job.title}
-                  company={
-                    (job.employerId as any)?.companyName ||
-                    (job.employerId as any)?.name
-                  } // Handle population
-                  location={job.location}
-                  type={job.type}
-                  salary={job.salaryRange || "Competitive"}
-                  postedAt="Recently" // TODO: Add time helper
-                  description={job.description}
-                  skills={job.requirements}
-                  isVerifiedHost={true} // Mock for now until we have company verification
-                />
-              ))
+              <>
+                {jobs.slice(0, visibleCount).map((job) => (
+                  <JobCard
+                    key={job._id}
+                    id={job._id}
+                    title={job.title}
+                    company={
+                      (job.employerId as any)?.companyName ||
+                      (job.employerId as any)?.name
+                    } // Handle population
+                    location={job.location}
+                    type={job.type}
+                    salary={job.salaryRange || "Competitive"}
+                    postedAt="Recently" // TODO: Add time helper
+                    description={job.description}
+                    skills={job.requirements}
+                    isVerifiedHost={true} // Mock for now until we have company verification
+                  />
+                ))}
+                {/* Pagination / Load More */}
+                {visibleCount < jobs.length && (
+                  <div className="pt-8 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="min-w-[200px]"
+                      onClick={handleLoadMore}
+                    >
+                      Load More Jobs
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-20 bg-white dark:bg-slate-950 rounded-lg border border-dashed">
                 <p className="text-muted-foreground">No jobs found.</p>
-              </div>
-            )}
-
-            {/* Pagination / Load More */}
-            {!isLoading && jobs.length > 0 && (
-              <div className="pt-8 flex justify-center">
-                <Button variant="outline" size="lg" className="min-w-[200px]">
-                  Load More Jobs
-                </Button>
               </div>
             )}
           </div>

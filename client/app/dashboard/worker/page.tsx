@@ -23,8 +23,10 @@ import {
   FileText,
   Clock,
   MapPin,
+  ShieldCheck,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VerificationTab from "@/components/dashboard/VerificationTab";
 import {
   Card,
   CardContent,
@@ -42,7 +44,7 @@ function WorkerDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "skills";
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
   const { getTaskBySkill } = useTaskStore();
   const {
     availableSkills,
@@ -54,13 +56,19 @@ function WorkerDashboardContent() {
   const [selectedSkill, setSelectedSkill] = useState("");
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login?redirect=/dashboard/worker");
-    } else {
-      fetchSkills();
-      fetchUserSkills();
+    if (!isLoading) {
+      if (!user) {
+        router.push("/login?redirect=/dashboard/worker");
+      } else if (user.role !== "worker" && user.role !== "admin") {
+        // Redirect if not worker
+        if (user.role === "employer") router.push("/dashboard/employer");
+        else if (user.role === "agent") router.push("/dashboard/agent");
+      } else {
+        fetchSkills();
+        fetchUserSkills();
+      }
     }
-  }, [user, router, fetchSkills, fetchUserSkills]);
+  }, [user, isLoading, router, fetchSkills, fetchUserSkills]);
 
   const handleAddSkill = async () => {
     if (selectedSkill) {
@@ -69,6 +77,7 @@ function WorkerDashboardContent() {
     }
   };
 
+  if (isLoading) return <div className="p-8 flex justify-center">Loading dashboard...</div>;
   if (!user) return null;
 
   return (
@@ -89,27 +98,8 @@ function WorkerDashboardContent() {
         </div>
       </div>
 
-      <Tabs defaultValue={defaultTab} key={defaultTab} className="w-full">
-        <TabsList className="w-full justify-start h-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-lg mb-6 flex-wrap">
-          <TabsTrigger
-            value="profile"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <User className="w-4 h-4 mr-2" /> Profile
-          </TabsTrigger>
-          <TabsTrigger
-            value="skills"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" /> Skills & Tasks
-          </TabsTrigger>
-          <TabsTrigger
-            value="applications"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <Briefcase className="w-4 h-4 mr-2" /> Applications
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={defaultTab} className="w-full">
+        {/* TabsList removed to avoid duplication with Sidebar */}
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
@@ -220,11 +210,10 @@ function WorkerDashboardContent() {
                     >
                       <div className="flex items-center gap-4 w-full sm:w-auto mb-4 sm:mb-0">
                         <div
-                          className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                            us.verified
-                              ? "bg-green-100 text-green-600"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
+                          className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${us.verified
+                            ? "bg-green-100 text-green-600"
+                            : "bg-slate-100 text-slate-500"
+                            }`}
                         >
                           {us.verified ? (
                             <CheckCircle2 className="w-5 h-5" />
@@ -314,6 +303,15 @@ function WorkerDashboardContent() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Verification Tab */}
+        <TabsContent value="verification" className="space-y-6">
+          <Card className="border-none shadow-md bg-white dark:bg-slate-900">
+            <CardContent className="p-0 sm:p-6">
+              <VerificationTab />
             </CardContent>
           </Card>
         </TabsContent>

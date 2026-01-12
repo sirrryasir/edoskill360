@@ -15,6 +15,8 @@ export interface Task {
   questions: Question[];
   maxScore: number;
   timeLimit: number;
+  type?: "static" | "ai-generated";
+  submissionType?: "quiz" | "file" | "text" | "link";
 }
 
 interface TaskState {

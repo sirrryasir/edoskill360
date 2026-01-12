@@ -1,0 +1,60 @@
+name: CI Pipeline (Tijaabinta)
+
+# Goorma ayaa la kicinayaa "Robot-ka"? (Trigger)
+# Marka code cusub lagu soo diro laanta 'main' (Push)
+# Ama marka 'Pull Request' la sameeyo
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Shaqada 1aad: Tijaabinta Backend-ka
+  test-backend:
+    runs-on: ubuntu-latest # Robot-ku wuxuu isticmaalayaa mashiin Ubuntu ah
+
+    services:
+      # Waxaan u baahannahay MongoDB si aan u tijaabino server-ka
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Soo qaado Code-ka (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Soo deji Bun (Setup Bun)
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Ku shub dependencies-ka Server-ka
+        run: cd server && bun install
+
+      - name: Kici Tijaabada (Run Tests)
+        run: cd server && bun run test
+        env:
+          # Waxaan u sheegeynaa inuu isticmaalo MongoDB-ga aan kor ku samaynay
+          MONGO_URI: mongodb://localhost:27017/test_db
+          JWT_SECRET: test_secret_key
+
+  # Shaqada 2aad: Tijaabinta Frontend-ka
+  test-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Soo qaado Code-ka
+        uses: actions/checkout@v4
+
+      - name: Soo deji Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Ku shub dependencies-ka Client-ka
+        run: cd client && bun install
+
+      - name: Kici Tijaabada (Run Tests)
+        run: cd client && bun run test

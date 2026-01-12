@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import Task from "../models/Task";
 import Skill from "../models/Skill";
 import TaskResult from "../models/TaskResult";
+import UserSkill from "../models/UserSkill";
+import { generateTask, evaluateSubmission } from "../services/aiService";
 
 // @desc    Create a new task
 // @route   POST /api/tasks
@@ -136,28 +138,46 @@ export const deleteTask = async (req: Request, res: Response) => {
 
 export const submitTask = async (req: any, res: Response) => {
   try {
-    const { answers } = req.body; // [{ questionIndex: 0, selectedOption: 1 }]
+    const { answers, submissionText, submissionFile, submissionLink } = req.body;
     const task = await Task.findById(req.params.id);
 
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    // 1. Calculate Score (Raw points)
-    let rawScore = 0;
-    const gradedAnswers = answers.map((ans: any) => {
-      const question = task.questions[ans.questionIndex];
-      // Safety check
-      if (!question) return { ...ans, isCorrect: false };
+    let score = 0;
+    let passed = false;
+    let status = "pending";
+    let gradedAnswers = [];
 
-      const isCorrect = question.correctOption === ans.selectedOption;
-      if (isCorrect) rawScore += task.maxScore / task.questions.length;
-      return { ...ans, isCorrect };
-    });
+    // Handle Quiz Submission
+    if (task.submissionType === "quiz") {
+      if (!answers) return res.status(400).json({ message: "Answers are required for quiz tasks" });
 
-    const score = Math.round(rawScore);
-    const percentageScore = (score / task.maxScore) * 100;
-    const passed = percentageScore >= 60; // Pass threshold for this specific task instance
+      let rawScore = 0;
+      gradedAnswers = answers.map((ans: any) => {
+        const question = task.questions?.find((q, index) => index === ans.questionIndex); // Safe access
+        // Fallback if questions are not aligned by index in request? Assuming index alignment.
+
+        // Better: Use index if question array is stable.
+        const q = task.questions ? task.questions[ans.questionIndex] : null;
+
+        if (!q) return { ...ans, isCorrect: false };
+
+        const isCorrect = q.correctOption === ans.selectedOption;
+        if (isCorrect && task.questions) rawScore += task.maxScore / task.questions.length;
+        return { ...ans, isCorrect };
+      });
+
+      score = Math.round(rawScore);
+      const percentageScore = (score / task.maxScore) * 100;
+      passed = percentageScore >= 60;
+      status = "reviewed"; // Auto-reviewed
+    } else {
+      // Handle Proof Submission (Text, File, Link)
+      // For MVP, these are manual reviews, so score=0, passed=false, status=pending
+      status = "pending";
+    }
 
     // 2. Save TaskResult
     const result = await TaskResult.create({
@@ -166,72 +186,167 @@ export const submitTask = async (req: any, res: Response) => {
       score: score,
       maxScore: task.maxScore,
       passed,
+      status,
       answers: gradedAnswers,
+      submissionText,
+      submissionFile,
+      submissionLink
     });
 
-    // 3. Aggregate for Verification Logic
-    // Find all results for this user & this skill to calculate average
-    const aggregation = await TaskResult.aggregate([
-      {
-        $lookup: {
-          from: "tasks",
-          localField: "taskId",
-          foreignField: "_id",
-          as: "taskInfo",
-        },
-      },
-      { $unwind: "$taskInfo" },
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(req.user._id),
-          "taskInfo.skillId": task.skillId, // Match by skillId
-        },
-      },
-      {
-        $project: {
-          percentage: {
-            $multiply: [{ $divide: ["$score", "$maxScore"] }, 100],
-          },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          avgScore: { $avg: "$percentage" },
-          attempts: { $sum: 1 },
-        },
-      },
-    ]);
+    // 3. Update UserSkill Verification Logic
+    if (passed && task.skillId) {
+      let userSkill = await UserSkill.findOne({
+        userId: req.user._id,
+        skillId: task.skillId,
+      });
 
-    const stats = aggregation[0] || { avgScore: 0, attempts: 0 };
-    const newAverageScore = Math.round(stats.avgScore);
-    const totalAttempts = stats.attempts;
-
-    // Defines Verification Criteria: Avg >= 70% AND Attempts >= 2
-    const isVerified = newAverageScore >= 70 && totalAttempts >= 2;
-
-    // 4. Update UserSkill
-    const UserSkill = (await import("../models/UserSkill")).default;
-
-    await UserSkill.findOneAndUpdate(
-      { userId: req.user._id, skillId: task.skillId },
-      {
-        score: newAverageScore,
-        verified: isVerified,
-      },
-      { upsert: true, new: true }
-    );
+      if (userSkill) {
+        // Update existing skill
+        if (score > userSkill.score) {
+          userSkill.score = score;
+        }
+        userSkill.verified = true;
+        await userSkill.save();
+      } else {
+        // Create new Verified Skill
+        await UserSkill.create({
+          userId: req.user._id,
+          skillId: task.skillId,
+          score: score,
+          verified: true,
+        });
+      }
+    }
 
     res.json({
       ...result.toObject(),
-      verificationUpdate: {
-        newAverageScore,
-        isVerified,
-        totalAttempts,
-      },
+      message:
+        status === "pending"
+          ? "Submission received. Under review."
+          : "Task graded.",
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const startAssessment = async (req: any, res: Response) => {
+  try {
+    const task = await Task.findById(req.params.id).populate("skillId");
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    if (task.type === "ai-generated") {
+      if (!process.env.GEMINI_API_KEY) {
+        console.error("Missing GEMINI_API_KEY");
+        return res.status(500).json({ message: "AI Service Unavailable (Configuration Error)" });
+      }
+
+      // @ts-ignore
+      const skillName = task.skillId?.name || "General Technical";
+
+      try {
+        const generatedParam = await generateTask(skillName, task.difficulty);
+
+        // Create a pending result to track this specific instance
+        const result = await TaskResult.create({
+          taskId: task._id,
+          userId: req.user._id,
+          maxScore: task.maxScore,
+          passed: false,
+          status: 'pending',
+          generatedQuestion: JSON.stringify(generatedParam),
+          completedAt: new Date() // Temporary, will update on submit
+        });
+
+        return res.json({
+          taskId: task._id,
+          resultId: result._id,
+          generatedQuestion: generatedParam,
+          type: "ai-generated"
+        });
+      } catch (aiGenError) {
+        console.error("AI Generation Failed:", aiGenError);
+        return res.status(500).json({
+          message: "Failed to generate AI assessment. Please try again later.",
+          debug: (aiGenError as Error).message
+        });
+      }
+    } else {
+      // Static Task - just return title/questions (hidden answers)
+      return res.json({
+        taskId: task._id,
+        questions: task.questions?.map(q => ({
+          question: q.question,
+          options: q.options
+        })),
+        type: "static"
+      });
+    }
+  } catch (error) {
+    console.error("Critical Start Assessment Error:", error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const submitAIAssessment = async (req: any, res: Response) => {
+  try {
+    const { resultId, answer } = req.body;
+    const result = await TaskResult.findById(resultId);
+
+    if (!result) return res.status(404).json({ message: "Result session not found" });
+    if (result.userId.toString() !== req.user._id.toString()) return res.status(401).json({ message: "Unauthorized" });
+    if (result.status !== "pending") return res.status(400).json({ message: "Already submitted" });
+
+    // Parse question to get text
+    const questionObj = JSON.parse(result.generatedQuestion || "{}");
+    // @ts-ignore
+    const questionText = questionObj.question || "Unknown Question";
+
+    const evaluation = await evaluateSubmission(questionText, answer);
+
+    // Update Result
+    result.score = evaluation.score || 0;
+    result.aiFeedback = evaluation.feedback;
+    result.passed = evaluation.passed;
+    result.status = evaluation.passed ? "approved" : "rejected"; // Auto approve/reject based on AI
+    result.completedAt = new Date();
+    // @ts-ignore
+    result.submissionText = answer;
+
+    await result.save();
+
+    // Update User Skill
+    if (result.passed) {
+      const task = await Task.findById(result.taskId);
+      if (task && task.skillId) {
+        // Update UserSkill logic
+        let userSkill = await UserSkill.findOne({ userId: req.user._id, skillId: task.skillId });
+        if (userSkill) {
+          if (result.score > userSkill.score) userSkill.score = result.score;
+          userSkill.verified = true;
+          await userSkill.save();
+        } else {
+          await UserSkill.create({ userId: req.user._id, skillId: task.skillId, score: result.score, verified: true });
+        }
+
+        // IMPORTANT: Update Global User Verification Stage
+        // Fetch user to check current stage and update if needed
+        const User = (await import("../models/User")).default;
+        await User.findByIdAndUpdate(req.user._id, {
+          "verificationStatus.skills": "verified",
+          verificationStage: "SKILLS_EVALUATED" // Matches STAGES id in frontend
+        });
+      }
+    }
+
+    res.json({
+      score: result.score,
+      passed: result.passed,
+      feedback: result.aiFeedback
+    });
+
+  } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
 };

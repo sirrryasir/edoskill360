@@ -4,7 +4,8 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: "worker" | "employer" | "admin";
+  role: "worker" | "employer" | "admin" | "agent";
+  verificationStage?: string;
 }
 
 interface AuthState {
@@ -20,7 +21,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   login: (userData) => {
     set({ user: userData });
-    localStorage.setItem("user", JSON.stringify(userData));
   },
   logout: async () => {
     try {
@@ -29,19 +29,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.error("Logout failed", error);
     }
     set({ user: null });
-    localStorage.removeItem("user");
   },
   checkAuth: async () => {
     try {
-      // Ideally verify with backend, but for MVP check local + profile
-      // Or better: call /api/users/profile to validate session
+      set({ isLoading: true });
       const res = await fetch("/api/users/profile");
       if (res.ok) {
         const user = await res.json();
         set({ user, isLoading: false });
       } else {
         set({ user: null, isLoading: false });
-        localStorage.removeItem("user");
       }
     } catch (error) {
       set({ user: null, isLoading: false });

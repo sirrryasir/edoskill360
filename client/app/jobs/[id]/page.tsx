@@ -42,7 +42,13 @@ export default function JobDetailsPage({
     }
     // Mock application logic - would need POST /api/jobs/:id/apply
     setIsApplied(true);
+    setIsApplied(true);
     alert("Application submitted successfully!");
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert("Job link copied to clipboard!");
   };
 
   if (isLoading) {
@@ -111,16 +117,15 @@ export default function JobDetailsPage({
             </div>
 
             <div className="flex gap-3 w-full md:w-auto">
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" onClick={handleShare}>
                 <Share2 className="w-4 h-4" />
               </Button>
               <Button
                 size="lg"
-                className={`w-full md:w-auto ${
-                  isApplied
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }`}
+                className={`w-full md:w-auto ${isApplied
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-blue-600 hover:bg-blue-700"
+                  }`}
                 onClick={handleApply}
                 disabled={isApplied}
               >

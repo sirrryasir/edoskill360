@@ -18,14 +18,23 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+import { usePathname } from "next/navigation";
+
 export default function Navbar() {
   const { user, logout } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Hide Navbar on Dashboard pages (they have their own Sidebar)
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
 
   // Navigation Links
   const navLinks = [
     { name: "Jobs", href: "/jobs" },
     { name: "Freelancers", href: "/freelancers" },
+    { name: "Verification", href: "/verification" }, // We'll likely remove this link later or redirect it
     { name: "How it Works", href: "/#how-it-works" },
   ];
 
@@ -61,7 +70,7 @@ export default function Navbar() {
                   {user.name}
                 </span>
                 <span className="text-xs text-muted-foreground capitalize">
-                  {user.role}
+                  {user.role === 'agent' ? 'agent' : user.role}
                 </span>
               </div>
 

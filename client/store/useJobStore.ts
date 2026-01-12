@@ -19,6 +19,7 @@ interface JobState {
   fetchJobs: () => Promise<void>;
   fetchMyJobs: () => Promise<void>;
   createJob: (jobData: any) => Promise<void>;
+  fetchJobApplications: (jobId: string) => Promise<any[]>;
 }
 
 export const useJobStore = create<JobState>((set, get) => ({
@@ -64,5 +65,20 @@ export const useJobStore = create<JobState>((set, get) => ({
     } catch (error) {
       console.error("Failed to create job", error);
     }
+  },
+  fetchJobApplications: async (jobId: string) => {
+    set({ isLoading: true });
+    try {
+      const res = await fetch(`/api/applications/job/${jobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch (error) {
+      console.error("Failed to fetch applications", error);
+    } finally {
+      set({ isLoading: false });
+    }
+    return [];
   },
 }));

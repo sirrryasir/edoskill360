@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useJobStore } from "@/store/useJobStore";
@@ -29,24 +29,83 @@ import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 
 function EmployerDashboardContent() {
-  const { myJobs, fetchMyJobs } = useJobStore();
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [isViewApplicantsOpen, setIsViewApplicantsOpen] = useState(false);
+  const { myJobs, fetchMyJobs, fetchJobApplications } = useJobStore(); // Destructure fetchJobApplications
+
+  const handleViewApplicants = async (jobId: string) => {
+    setSelectedJobId(jobId);
+    const apps = await fetchJobApplications(jobId);
+    setApplications(apps);
+    setIsViewApplicantsOpen(true);
+  };
 
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "my-jobs";
 
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login?redirect=/dashboard/employer");
-    } else {
-      fetchMyJobs();
+    if (!isLoading) {
+      if (!user) {
+        router.push("/login?redirect=/dashboard/employer");
+      } else if (user.role !== "employer" && user.role !== "admin") {
+        // Redirect to correct dashboard if not employer
+        if (user.role === "worker") router.push("/dashboard/worker");
+        else if (user.role === "agent") router.push("/dashboard/agent");
+      } else {
+        fetchMyJobs();
+      }
     }
-  }, [user, router, fetchMyJobs]);
+  }, [user, isLoading, router, fetchMyJobs]);
+
+  if (isLoading) return <div className="p-8 flex justify-center">Loading dashboard...</div>;
 
   return (
     <div className="space-y-8">
+      {/* Details Modal */}
+      {isViewApplicantsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold">Applicants</h3>
+              <Button variant="ghost" size="sm" onClick={() => setIsViewApplicantsOpen(false)}>X</Button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              {applications.length === 0 ? (
+                <p className="text-center text-muted-foreground">No applications yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {applications.map((app) => (
+                    <div key={app._id} className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-lg">{app.workerId?.name || "Unknown Worker"}</h4>
+                          <p className="text-sm text-slate-500">{app.workerId?.headline}</p>
+                        </div>
+                        <Badge variant={app.status === 'accepted' ? 'default' : 'outline'}>{app.status}</Badge>
+                      </div>
+                      {app.coverLetter && (
+                        <div className="mt-3 bg-slate-50 dark:bg-slate-800 p-3 rounded text-sm text-slate-700 dark:text-slate-300">
+                          <p className="font-semibold mb-1">Cover Letter:</p>
+                          {app.coverLetter}
+                        </div>
+                      )}
+                      <div className="mt-3 flex gap-2">
+                        <Button size="sm">Accept</Button>
+                        <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600">Reject</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">
@@ -57,33 +116,8 @@ function EmployerDashboardContent() {
         </p>
       </div>
 
-      <Tabs defaultValue={defaultTab} key={defaultTab} className="w-full">
-        <TabsList className="w-full justify-start h-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-lg mb-6 flex-wrap">
-          <TabsTrigger
-            value="post-job"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-2" /> Post a Job
-          </TabsTrigger>
-          <TabsTrigger
-            value="my-jobs"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <FileText className="w-4 h-4 mr-2" /> My Jobs
-          </TabsTrigger>
-          <TabsTrigger
-            value="applicants"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <Users className="w-4 h-4 mr-2" /> Applicants
-          </TabsTrigger>
-          <TabsTrigger
-            value="search"
-            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm"
-          >
-            <Search className="w-4 h-4 mr-2" /> Talent Search
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={defaultTab} className="w-full">
+        {/* TabsList removed to avoid duplication in Sidebar */}
 
         {/* Post Job Tab */}
         <TabsContent value="post-job">
@@ -146,6 +180,9 @@ function EmployerDashboardContent() {
                           </div>
                         </div>
                         <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleViewApplicants(job._id)}>
+                            View Applicants
+                          </Button>
                           <Button variant="outline" size="sm">
                             Edit
                           </Button>
@@ -189,10 +226,7 @@ function EmployerDashboardContent() {
             <CardContent>
               <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
                 <Users className="w-10 h-10 mx-auto text-slate-300 mb-3" />
-                <p className="text-slate-500">No new applicants yet.</p>
-                <p className="text-sm text-slate-400">
-                  Notifications will appear here when workers apply.
-                </p>
+                <p className="text-slate-500">Select a job from 'My Jobs' to view applicants.</p>
               </div>
             </CardContent>
           </Card>

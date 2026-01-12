@@ -23,6 +23,11 @@ export const protect = async (
       );
 
       req.user = await User.findById(decoded.id).select("-password");
+
+      if (!req.user) {
+        return res.status(401).json({ message: "Not authorized, user not found" });
+      }
+
       next();
     } catch (error) {
       console.error(error);
@@ -38,5 +43,21 @@ export const admin = (req: AuthRequest, res: Response, next: NextFunction) => {
     next();
   } else {
     res.status(401).json({ message: "Not authorized as an admin" });
+  }
+};
+
+export const agent = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user && (req.user.role === "agent" || req.user.role === "admin")) {
+    next();
+  } else {
+    res.status(401).json({ message: "Not authorized as a agent" });
+  }
+};
+
+export const employer = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user && (req.user.role === "employer" || req.user.role === "admin")) {
+    next();
+  } else {
+    res.status(401).json({ message: "Not authorized as an employer" });
   }
 };

@@ -7,6 +7,7 @@ import Job from "../models/Job";
 import Feedback from "../models/Feedback";
 import TaskResult from "../models/TaskResult";
 import UserSkill from "../models/UserSkill";
+import agentProfile from "../models/agentProfile";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ const seedData = async () => {
     await Feedback.deleteMany({});
     await TaskResult.deleteMany({});
     await UserSkill.deleteMany({});
+    await agentProfile.deleteMany({});
     console.log("✅ Database cleared.");
 
     console.log("------------------------------------------");
@@ -50,11 +52,99 @@ const seedData = async () => {
       { name: "Digital Marketing", category: "Marketing" }, // 7
       { name: "SEO Optimization", category: "Marketing" }, // 8
       { name: "Data Analysis", category: "Data Science" }, // 9
+      { name: "Project Management", category: "Business" }, // 10
+      { name: "Content Writing", category: "Writing" }, // 11
     ]);
     console.log(`✅ Seeded ${skills.length} skills.`);
 
     console.log("------------------------------------------");
-    console.log("👤 Seeding Users...");
+    console.log("� Seeding Tasks (Assessments)...");
+
+    // Create assignments (Tasks) EARLY so we can link results to them later
+    const tasks = await Task.create([
+      {
+        skillId: skills[1]._id, // React
+        title: "React Developer Certification",
+        description:
+          "Assess your mastery of React hooks, lifecycle methods, and component patterns.",
+        difficulty: "medium",
+        maxScore: 100,
+        timeLimit: 45,
+        submissionType: "quiz",
+        questions: [
+          {
+            question:
+              "Which hook is used to perform side effects in functional components?",
+            options: ["useState", "useEffect", "useContext", "useReducer"],
+            correctOption: 1,
+          },
+          {
+            question: "What is the purpose of the key prop in lists?",
+            options: [
+              "Uniquely identify elements",
+              "Style specific elements",
+              "Bind event handlers",
+              "None of the above",
+            ],
+            correctOption: 0,
+          },
+        ],
+      },
+      {
+        skillId: skills[5]._id, // Figma
+        title: "Figma Design Expertise",
+        description:
+          "Validate your skills in prototyping, auto-layout, and component systems.",
+        difficulty: "hard",
+        maxScore: 100,
+        timeLimit: 60,
+        submissionType: "quiz",
+        questions: [
+          {
+            question: "What is the shortcut to duplicate an element?",
+            options: ["Ctrl+C", "Ctrl+D", "Alt+Drag", "Both B and C"],
+            correctOption: 3,
+          },
+        ],
+      },
+    ]);
+
+
+
+    // Create an AI-Generated Task for React (Explicit)
+    await Task.create({
+      skillId: skills[1]._id, // React
+      title: "Advanced React AI Challenge",
+      description: "A dynamic, AI-generated coding challenge to test your deep understanding of React.",
+      difficulty: "hard",
+      type: "ai-generated",
+      submissionType: "text",
+      maxScore: 100,
+      timeLimit: 45,
+    });
+
+    // Ensure EVERY skill has at least one AI Assessment template
+    for (const skill of skills) {
+      const existingTask = await Task.findOne({ skillId: skill._id });
+      if (!existingTask) {
+        await Task.create({
+          skillId: skill._id,
+          title: `${skill.name} Skill Assessment`,
+          description: `Verify your expertise in ${skill.name} with our AI-powered assessment.`,
+          difficulty: "medium", // Default
+          type: "ai-generated",
+          submissionType: "text",
+          maxScore: 100,
+          timeLimit: 40,
+          questions: [] // No static questions needed
+        });
+        console.log(`+ Created AI Task for ${skill.name}`);
+      }
+    }
+    console.log(`✅ Seeded assessments for all skills.`);
+
+    console.log("------------------------------------------");
+    console.log("�👤 Seeding Users...");
 
     // 1. Admin
     const admin = await User.create({
@@ -65,7 +155,25 @@ const seedData = async () => {
       headline: "System Administrator",
     });
 
-    // 2. Employers
+    // 2. Agents (Verifiers)
+    const agent = await User.create({
+      name: "Official Verifiers",
+      email: "agents@edoskill360.com",
+      password: "password123",
+      role: "agent",
+      headline: "Official Agent",
+      bio: "Authorized verification agent for EduSkill360.",
+    });
+
+    await agentProfile.create({
+      userId: agent._id,
+      expertise: ["Development", "Design", "Identity"],
+      rating: 5.0,
+      reviewsCount: 0,
+    });
+    console.log("✅ Seeded Agent user.");
+
+    // 3. Employers
     const employers = await User.create([
       {
         name: "TechFlow Solutions",
@@ -91,11 +199,19 @@ const seedData = async () => {
         password: "password123",
         role: "employer",
         headline: "Multinational Technology Firm",
-        location: "Nairobi, Kenya", // Regional context
+        location: "Nairobi, Kenya",
+      },
+      {
+        name: "Somali Logistics",
+        email: "logistics@example.com",
+        password: "password123",
+        role: "employer",
+        headline: "Leading Logistics Provider",
+        location: "Bosaso, Puntland",
       },
     ]);
 
-    // 3. Workers (Freelancers)
+    // 4. Workers (Freelancers)
     const workers = await User.create([
       {
         name: "Ahmed Hassan",
@@ -133,136 +249,102 @@ const seedData = async () => {
         bio: "Helping brands grow their online presence through SEO and social media strategies.",
         location: "Hargeisa, Somaliland",
       },
+      {
+        name: "Abdiqani Farah",
+        email: "abdiqani@example.com",
+        password: "password123",
+        role: "worker",
+        headline: "Project Manager",
+        bio: "Certified PMP with experience in agile workflows.",
+        location: "Djibouti",
+      },
     ]);
     console.log(
       `✅ Seeded ${employers.length} employers and ${workers.length} workers.`
     );
 
     console.log("------------------------------------------");
-    console.log("🏅 Seeding User Skills (Verifications)...");
+    console.log("🏅 Seeding User Skills & Exam History...");
 
     // Ahmed (Worker 0) - Dev Skills
-    await UserSkill.create([
-      {
-        userId: workers[0]._id,
-        skillId: skills[0]._id,
-        score: 92,
-        verified: true,
-      }, // JS
-      {
-        userId: workers[0]._id,
-        skillId: skills[1]._id,
-        score: 88,
-        verified: true,
-      }, // React
-      {
-        userId: workers[0]._id,
-        skillId: skills[2]._id,
-        score: 85,
-        verified: true,
-      }, // Node
-      {
-        userId: workers[0]._id,
-        skillId: skills[3]._id,
-        score: 75,
-        verified: false,
-      }, // TypeScript
-    ]);
+    // 1. React (Verified with Exam History)
+    await UserSkill.create({
+      userId: workers[0]._id,
+      skillId: skills[1]._id,
+      score: 92,
+      verified: true,
+    });
+    // Create corresponding Exam Result
+    await TaskResult.create({
+      taskId: tasks[0]._id, // React Task
+      userId: workers[0]._id,
+      score: 92,
+      maxScore: 100,
+      passed: true,
+      status: "approved",
+      completedAt: new Date(),
+    });
+
+    // 2. JS (Verified Manual/Imported - No Exam in system yet)
+    await UserSkill.create({
+      userId: workers[0]._id,
+      skillId: skills[0]._id,
+      score: 88,
+      verified: true,
+    });
+    // 3. Node (Verified)
+    await UserSkill.create({
+      userId: workers[0]._id,
+      skillId: skills[2]._id,
+      score: 85,
+      verified: true,
+    });
+    // 4. TS (Unverified)
+    await UserSkill.create({
+      userId: workers[0]._id,
+      skillId: skills[3]._id,
+      score: 75,
+      verified: false,
+    });
 
     // Sarah (Worker 1) - Design Skills
-    await UserSkill.create([
-      {
-        userId: workers[1]._id,
-        skillId: skills[5]._id,
-        score: 95,
-        verified: true,
-      }, // Figma
-      {
-        userId: workers[1]._id,
-        skillId: skills[6]._id,
-        score: 90,
-        verified: true,
-      }, // UI/UX
-    ]);
+    // 1. Figma (Verified with Exam History)
+    await UserSkill.create({
+      userId: workers[1]._id,
+      skillId: skills[5]._id,
+      score: 95,
+      verified: true,
+    });
+    await TaskResult.create({
+      taskId: tasks[1]._id, // Figma Task
+      userId: workers[1]._id,
+      score: 95,
+      maxScore: 100,
+      passed: true,
+      status: "approved",
+      completedAt: new Date(),
+    });
+
+    // 2. UI/UX (Verified)
+    await UserSkill.create({
+      userId: workers[1]._id,
+      skillId: skills[6]._id,
+      score: 90,
+      verified: true,
+    });
 
     // Mohamed (Worker 2) - Data Skills
     await UserSkill.create([
-      {
-        userId: workers[2]._id,
-        skillId: skills[4]._id,
-        score: 94,
-        verified: true,
-      }, // Python
-      {
-        userId: workers[2]._id,
-        skillId: skills[9]._id,
-        score: 89,
-        verified: true,
-      }, // Data Analysis
+      { userId: workers[2]._id, skillId: skills[4]._id, score: 94, verified: true },
+      { userId: workers[2]._id, skillId: skills[9]._id, score: 89, verified: true },
     ]);
 
     // Khadra (Worker 3) - Marketing Skills
     await UserSkill.create([
-      {
-        userId: workers[3]._id,
-        skillId: skills[7]._id,
-        score: 85,
-        verified: true,
-      }, // Digital Marketing
+      { userId: workers[3]._id, skillId: skills[7]._id, score: 85, verified: true },
     ]);
 
-    console.log("✅ Seeded verified skills for workers.");
-
-    console.log("------------------------------------------");
-    console.log("📝 Seeding Tasks (Assessments)...");
-
-    // Create assessments for key skills
-    const tasks = await Task.create([
-      {
-        skillId: skills[1]._id, // React
-        title: "React Developer Certification",
-        description:
-          "Assess your mastery of React hooks, lifecycle methods, and component patterns.",
-        difficulty: "medium",
-        maxScore: 100,
-        timeLimit: 45,
-        questions: [
-          {
-            question:
-              "Which hook is used to perform side effects in functional components?",
-            options: ["useState", "useEffect", "useContext", "useReducer"],
-            correctOption: 1,
-          },
-          {
-            question: "What is the purpose of the key prop in lists?",
-            options: [
-              "Uniquely identify elements",
-              "Style specific elements",
-              "Bind event handlers",
-              "None of the above",
-            ],
-            correctOption: 0,
-          },
-        ],
-      },
-      {
-        skillId: skills[5]._id, // Figma
-        title: "Figma Design Expertise",
-        description:
-          "Validate your skills in prototyping, auto-layout, and component systems.",
-        difficulty: "hard",
-        maxScore: 100,
-        timeLimit: 60,
-        questions: [
-          {
-            question: "What is the shortcut to duplicate an element?",
-            options: ["Ctrl+C", "Ctrl+D", "Alt+Drag", "Both B and C"],
-            correctOption: 3,
-          },
-        ],
-      },
-    ]);
-    console.log(`✅ Seeded ${tasks.length} assessments.`);
+    console.log("✅ Seeded verified skills & exam history.");
 
     console.log("------------------------------------------");
     console.log("💼 Seeding Jobs...");
@@ -307,15 +389,43 @@ const seedData = async () => {
         salaryRange: "$3000 - $4000 / month",
         location: "Nairobi, Kenya",
         type: "full-time",
-        status: "closed", // Example closed job
+        status: "closed",
+      },
+      {
+        employerId: employers[3]._id, // Somali Logistics
+        title: "Supply Chain Coordinator",
+        description: "Coordinate logistics and supply chain operations.",
+        requirements: ["Logistics", "Communication", "Excel"],
+        salaryRange: "$800 - $1200 / month",
+        location: "Bosaso, Puntland",
+        type: "full-time",
+        status: "open",
       },
     ]);
     console.log("✅ Seeded jobs.");
 
+    // Import Application model (Dynamic import or top level if possible, but for replace_file I'll just rely on what I can do)
+    // Wait, I need to add import at top first. Run separate tool for that.
+
+    // Assuming Import is added...
+    // 5. Seeding Applications
+    console.log("------------------------------------------");
+    console.log("📄 Seeding Applications...");
+
+    const Application = (await import("../models/Application")).default;
+
+    await Application.create({
+      jobId: (await Job.findOne({ title: "Senior Frontend Engineer" }))?._id,
+      workerId: workers[0]._id, // Ahmed
+      coverLetter: "I am the perfect fit for this React role. I have 5 years experience.",
+      resumeLink: "https://example.com/resume.pdf",
+      status: "pending"
+    });
+    console.log("✅ Seeded applications.");
+
     console.log("------------------------------------------");
     console.log("⭐ Seeding Feedback (Reviews)...");
 
-    // Use the first job implicitly for feedback or just generic feedback
     await Feedback.create([
       {
         employerId: employers[0]._id,

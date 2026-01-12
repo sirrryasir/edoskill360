@@ -5,12 +5,34 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  role: "worker" | "employer" | "admin";
+  role: "worker" | "employer" | "admin" | "agent";
   headline?: string;
   bio?: string;
   location?: string;
   createdAt: Date;
   updatedAt: Date;
+  // Verification Fields
+  trustScore: number;
+  verificationStatus: {
+    identity: "unverified" | "pending" | "verified";
+    skills: "unverified" | "partial" | "verified";
+    experience: "unverified" | "partial" | "verified";
+    references: "unverified" | "partial" | "verified";
+  };
+  identityProof?: string; // URL to ID image
+  verificationStage:
+  | "UNVERIFIED"
+  | "PROFILE_COMPLETED"
+  | "IDENTITY_SUBMITTED"
+  | "IDENTITY_APPROVED"
+  | "IDENTITY_REJECTED"
+  | "SKILLS_TESTING"
+  | "SKILLS_EVALUATED"
+  | "AI_VALIDATION_PASSED"
+  | "REFERENCES_PENDING"
+  | "REFERENCES_VERIFIED"
+  | "VERIFIED"
+  | "REJECTED";
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -21,12 +43,55 @@ const UserSchema: Schema = new Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["worker", "employer", "admin"],
+      enum: ["worker", "employer", "admin", "agent"],
       default: "worker",
     },
     headline: { type: String },
     bio: { type: String },
     location: { type: String },
+    // Verification Fields
+    trustScore: { type: Number, default: 0 },
+    verificationStatus: {
+      identity: {
+        type: String,
+        enum: ["unverified", "pending", "verified"],
+        default: "unverified",
+      },
+      skills: {
+        type: String,
+        enum: ["unverified", "partial", "verified"],
+        default: "unverified",
+      },
+      experience: {
+        type: String,
+        enum: ["unverified", "partial", "verified"],
+        default: "unverified",
+      },
+      references: {
+        type: String,
+        enum: ["unverified", "partial", "verified"],
+        default: "unverified",
+      },
+    },
+    identityProof: { type: String },
+    verificationStage: {
+      type: String,
+      enum: [
+        "UNVERIFIED",
+        "PROFILE_COMPLETED",
+        "IDENTITY_SUBMITTED",
+        "IDENTITY_APPROVED",
+        "IDENTITY_REJECTED",
+        "SKILLS_TESTING",
+        "SKILLS_EVALUATED",
+        "AI_VALIDATION_PASSED",
+        "REFERENCES_PENDING",
+        "REFERENCES_VERIFIED",
+        "VERIFIED",
+        "REJECTED",
+      ],
+      default: "UNVERIFIED",
+    },
   },
   { timestamps: true }
 );

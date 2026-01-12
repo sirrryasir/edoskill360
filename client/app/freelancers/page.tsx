@@ -21,6 +21,11 @@ import { usePublicDataStore } from "@/store/usePublicDataStore";
 export default function FreelancersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { freelancers, fetchFreelancers, isLoading } = usePublicDataStore();
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 6);
+  };
 
   useEffect(() => {
     fetchFreelancers();
@@ -151,35 +156,42 @@ export default function FreelancersPage() {
                 Loading talent...
               </div>
             ) : freelancers.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {freelancers.map((freelancer) => (
-                  <FreelancerCard
-                    key={freelancer._id}
-                    id={freelancer._id}
-                    name={freelancer.name}
-                    title={freelancer.headline || "Freelancer"}
-                    location={freelancer.location || "Remote"}
-                    rate="$35/hr" // Mock as it's not in User model yet
-                    verified={true} // Mock check
-                    score={90} // Mock score
-                    skills={["Verified Pro"]} // Needs aggregation
-                    reviews={10} // Mock
-                    rating={5.0} // Mock
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {freelancers.slice(0, visibleCount).map((freelancer) => (
+                    <FreelancerCard
+                      key={freelancer._id}
+                      id={freelancer._id}
+                      name={freelancer.name}
+                      title={freelancer.headline || "Freelancer"}
+                      location={freelancer.location || "Remote"}
+                      rate="$35/hr" // Mock as it's not in User model yet
+                      verified={true} // Mock check
+                      score={90} // Mock score
+                      skills={["Verified Pro"]} // Needs aggregation
+                      reviews={10} // Mock
+                      rating={5.0} // Mock
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination / Load More */}
+                {visibleCount < freelancers.length && (
+                  <div className="pt-12 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="min-w-[200px]"
+                      onClick={handleLoadMore}
+                    >
+                      Load More Freelancers
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-20 bg-white dark:bg-slate-950 rounded-lg border border-dashed">
                 <p className="text-muted-foreground">No freelancers found.</p>
-              </div>
-            )}
-
-            {/* Pagination / Load More */}
-            {!isLoading && freelancers.length > 0 && (
-              <div className="pt-12 flex justify-center">
-                <Button variant="outline" size="lg" className="min-w-[200px]">
-                  Load More Freelancers
-                </Button>
               </div>
             )}
           </div>

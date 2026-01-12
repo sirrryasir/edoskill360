@@ -7,6 +7,8 @@ import {
   deleteTask,
   submitTask,
   getTaskBySkillId,
+  startAssessment,
+  submitAIAssessment,
 } from "../controllers/taskController";
 import { protect, admin } from "../middleware/authMiddleware";
 
@@ -24,6 +26,8 @@ router
   .delete(protect, admin, deleteTask);
 
 router.route("/:id/submit").post(protect, submitTask);
+router.route("/:id/start").post(protect, startAssessment);
+router.route("/submit-ai").post(protect, submitAIAssessment);
 
 router.route("/skill/:skillId").get(protect, getTaskBySkillId);
 

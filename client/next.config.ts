@@ -3,12 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   async rewrites() {
+    const backendUrl = process.env.INTERNAL_API_URL || (process.env.IS_DOCKER === "true" ? "http://server:5000" : "http://localhost:5000");
+
     return [
       {
         source: "/api/:path*",
-        destination: `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-        }/api/:path*`, // Proxy to Backend
+        destination: `${backendUrl}/api/:path*`, // Proxy to Backend
       },
     ];
   },

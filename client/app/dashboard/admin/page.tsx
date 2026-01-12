@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useSkillStore } from "@/store/useSkillStore";
@@ -10,14 +11,19 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Box } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
   const { tasks, fetchTasks, deleteTask } = useTaskStore();
   const { fetchSkills } = useSkillStore();
+  const router = useRouter(); // Need router for redirect if not admin? Or just show denied.
 
   useEffect(() => {
-    fetchTasks();
-    fetchSkills();
-  }, [fetchTasks, fetchSkills]);
+    if (user?.role === "admin") {
+      fetchTasks();
+      fetchSkills();
+    }
+  }, [user, fetchTasks, fetchSkills]);
+
+  if (isLoading) return <div className="p-8 text-center">Loading admin panel...</div>;
 
   if (user?.role !== "admin") {
     return (
@@ -82,19 +88,18 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
                         <span className="font-medium text-slate-700 dark:text-slate-300">
                           {typeof task.skillId === "object" &&
-                          task.skillId?.name
+                            task.skillId?.name
                             ? task.skillId.name
                             : "Unknown Skill"}
                         </span>
                         <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                         <span
-                          className={`capitalize ${
-                            task.difficulty === "hard"
-                              ? "text-red-500"
-                              : task.difficulty === "medium"
+                          className={`capitalize ${task.difficulty === "hard"
+                            ? "text-red-500"
+                            : task.difficulty === "medium"
                               ? "text-yellow-600"
                               : "text-green-600"
-                          }`}
+                            }`}
                         >
                           {task.difficulty}
                         </span>

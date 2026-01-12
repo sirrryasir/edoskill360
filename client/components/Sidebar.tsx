@@ -13,6 +13,7 @@ import {
   LogOut,
   User,
   Menu,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,11 @@ export function Sidebar() {
         label: "My Skills",
         icon: CheckCircle,
       },
+      {
+        href: "/dashboard/worker?tab=verification",
+        label: "Verification",
+        icon: ShieldCheck,
+      },
       { href: "/profile/me", label: "Public Profile", icon: User },
     ],
     employer: [
@@ -64,9 +70,14 @@ export function Sidebar() {
       { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/admin/tasks", label: "Manage Tasks", icon: Settings },
     ],
+    agent: [
+      // Basic links for agent/agent
+      { href: "/dashboard/agent", label: "Dashboard", icon: LayoutDashboard },
+    ]
   };
 
   const links = roleLinks[user.role] || [];
+  const displayRole = user.role === 'agent' ? 'Agent' : user.role;
 
   const NavContent = () => (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800">
@@ -109,7 +120,7 @@ export function Sidebar() {
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-medium truncate">{user.name}</span>
             <span className="text-xs text-slate-500 capitalize">
-              {user.role}
+              {displayRole}
             </span>
           </div>
         </div>

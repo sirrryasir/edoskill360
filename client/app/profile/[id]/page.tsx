@@ -2,6 +2,7 @@
 
 import { use, useEffect } from "react";
 import { usePublicDataStore } from "@/store/usePublicDataStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -24,12 +25,27 @@ export default function PublicProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { user, isLoading: authLoading } = useAuthStore();
   const { currentFreelancer, fetchFreelancerById, isLoading, error } =
     usePublicDataStore();
 
   useEffect(() => {
-    fetchFreelancerById(id);
-  }, [id, fetchFreelancerById]);
+    if (authLoading) return;
+
+    let profileId = id;
+    if (profileId === "me") {
+      if (!user) {
+        // If trying to view own profile but not logged in, redirect
+        // router.push("/login?redirect=/profile/me"); // Can't easily use router inside useEffect without deps warning, but fine for now
+        return;
+      }
+      profileId = user._id;
+    }
+
+    if (profileId) {
+      fetchFreelancerById(profileId);
+    }
+  }, [id, fetchFreelancerById, user, authLoading]);
 
   if (isLoading) {
     return (
@@ -103,16 +119,19 @@ export default function PublicProfilePage({
               </div>
 
               <div className="space-y-3 mb-6">
-                <Link href="/login">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20">
-                    Hire Me
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button variant="outline" className="w-full">
-                    Message
-                  </Button>
-                </Link>
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20"
+                  onClick={() => window.location.href = `mailto:?subject=Hiring Inquiry: ${currentFreelancer.name}`}
+                >
+                  Hire Me
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => window.location.href = `mailto:?subject=Message for ${currentFreelancer.name}`}
+                >
+                  Message
+                </Button>
               </div>
 
               <div className="border-t pt-6 text-left space-y-4 text-sm">
@@ -176,7 +195,7 @@ export default function PublicProfilePage({
 
               <div className="grid md:grid-cols-2 gap-6">
                 {currentFreelancer.skills &&
-                currentFreelancer.skills.length > 0 ? (
+                  currentFreelancer.skills.length > 0 ? (
                   currentFreelancer.skills.map((userSkill) => (
                     <div key={userSkill._id} className="space-y-2">
                       <div className="flex justify-between font-medium">
@@ -254,7 +273,7 @@ export default function PublicProfilePage({
 
                   <TabsContent value="reviews" className="mt-0 space-y-6">
                     {currentFreelancer.reviews &&
-                    currentFreelancer.reviews.length > 0 ? (
+                      currentFreelancer.reviews.length > 0 ? (
                       currentFreelancer.reviews.map((review) => (
                         <div
                           key={review._id}
