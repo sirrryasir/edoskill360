@@ -11,7 +11,7 @@ describe('User Endpoints', () => {
         name: 'Profile Tester',
         email: 'profile@example.com',
         password: 'password123',
-        role: 'worker',
+        role: 'talent',
         headline: 'Software Engineer'
     };
 
@@ -72,10 +72,10 @@ describe('User Endpoints', () => {
             // In the controller I saw:
             // user.name = req.body.name || user.name;
             // ...
-            // It does NOT list role as updatable. Let's verify it stays as 'worker'
+            // It does NOT list role as updatable. Let's verify it stays as 'talent'
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.role).toEqual('worker');
+            expect(res.body.role).toEqual('talent');
         });
     });
 

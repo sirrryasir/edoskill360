@@ -16,23 +16,23 @@ describe('Agent Endpoints', () => {
         const agentCookie = agentRes.headers['set-cookie'] as unknown as string[];
 
         // 2. Register Worker
-        const workerRes = await request(app).post('/api/auth/register').send({
-            name: 'Neo Flow',
+        const talentRes = await request(app).post('/api/auth/register').send({
+            name: 'Neo Talent',
             email: 'neo.flow@matrix.com',
             password: 'password123',
-            role: 'worker'
+            role: 'talent'
         });
-        const workerCookie = workerRes.headers['set-cookie'] as unknown as string[];
-        const workerId = workerRes.body._id;
+        const talentCookie = talentRes.headers['set-cookie'] as unknown as string[];
+        const talentId = talentRes.body._id;
 
-        // 3. Worker submits Identity Verification
+        // 3. Talent submits Identity Verification
         await request(app)
             .post('/api/verification/identity')
-            .set('Cookie', workerCookie)
+            .set('Cookie', talentCookie)
             .send({ identityProof: 'http://id.com/neo.jpg' });
 
         // Fetch verification ID
-        const ver = await Verification.findOne({ userId: workerId });
+        const ver = await Verification.findOne({ userId: talentId });
         const verificationId = ver?._id.toString();
 
         // 4. Agent views pending requests
@@ -45,10 +45,10 @@ describe('Agent Endpoints', () => {
         const found = listRes.body.verifications.find((v: any) => v._id === verificationId);
         expect(found).toBeDefined();
 
-        // 5. Worker tries to view pending (should fail)
+        // 5. Talent tries to view pending (should fail)
         const denyRes = await request(app)
             .get('/api/agent/pending')
-            .set('Cookie', workerCookie);
+            .set('Cookie', talentCookie);
         expect(denyRes.statusCode).toBeGreaterThanOrEqual(400);
 
         // 6. Agent approves verification
@@ -67,7 +67,7 @@ describe('Agent Endpoints', () => {
         // 7. Verify Trust Score updated
         const statusRes = await request(app)
             .get('/api/verification/status')
-            .set('Cookie', workerCookie);
+            .set('Cookie', talentCookie);
 
         expect(statusRes.body.verificationStatus.identity).toEqual('verified');
         expect(statusRes.body.trustScore).toEqual(20);

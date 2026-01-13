@@ -2,7 +2,7 @@ import express from "express";
 import {
   getUserProfile,
   updateUserProfile,
-  getWorkers,
+  getTalents,
   getUserById,
 } from "../controllers/userController";
 import {
@@ -22,7 +22,7 @@ router
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
 
-router.get("/workers", getWorkers);
+router.get("/talents", getTalents);
 router.route("/:id").get(getUserById);
 
 export default router;

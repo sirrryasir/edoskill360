@@ -40,7 +40,7 @@ export const getUserById = async (req: Request, res: Response) => {
       );
 
       // Fetch Feedback
-      const reviews = await Feedback.find({ workerId: user._id }).populate(
+      const reviews = await Feedback.find({ talentId: user._id }).populate(
         "employerId",
         "name"
       );
@@ -58,14 +58,14 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-// @desc    Get all workers with filters
-// @route   GET /api/users/workers
+// @desc    Get all talents with filters
+// @route   GET /api/users/talents
 // @access  Private/Employer (Public in this context for "Find Talent")
-export const getWorkers = async (req: Request, res: Response) => {
+export const getTalents = async (req: Request, res: Response) => {
   try {
     const { search, verified } = req.query;
 
-    const query: any = { role: "worker" };
+    const query: any = { role: "talent" };
 
     if (search) {
       query.$or = [
@@ -80,13 +80,13 @@ export const getWorkers = async (req: Request, res: Response) => {
       query.verificationStage = "VERIFIED";
     }
 
-    const workers = await User.find(query).select("-password").sort({
+    const talents = await User.find(query).select("-password").sort({
       trustScore: -1, // Show high trust first
       verificationStage: -1 // Show verified first (lexicographically V > U, mostly works)
     });
 
     // In a real app, populate skills here.
-    res.json(workers);
+    res.json(talents);
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useJobStore } from "@/store/useJobStore";
 import PostJobForm from "@/components/PostJobForm";
-import WorkerSearch from "@/components/WorkerSearch";
+import TalentSearch from "@/components/TalentSearch";
 import { Badge } from "@/components/ui/badge";
 import {
   MapPin,
@@ -53,7 +53,7 @@ function EmployerDashboardContent() {
         router.push("/login?redirect=/dashboard/employer");
       } else if (user.role !== "employer" && user.role !== "admin") {
         // Redirect to correct dashboard if not employer
-        if (user.role === "worker") router.push("/dashboard/worker");
+        if (user.role === "talent") router.push("/dashboard/talent");
         else if (user.role === "agent") router.push("/dashboard/agent");
       } else {
         fetchMyJobs();
@@ -82,8 +82,8 @@ function EmployerDashboardContent() {
                     <div key={app._id} className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-bold text-lg">{app.workerId?.name || "Unknown Worker"}</h4>
-                          <p className="text-sm text-slate-500">{app.workerId?.headline}</p>
+                          <h4 className="font-bold text-lg">{app.talentId?.name || "Unknown Talent"}</h4>
+                          <p className="text-sm text-slate-500">{app.talentId?.headline}</p>
                         </div>
                         <Badge variant={app.status === 'accepted' ? 'default' : 'outline'}>{app.status}</Badge>
                       </div>
@@ -242,7 +242,7 @@ function EmployerDashboardContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <WorkerSearch />
+              <TalentSearch />
             </CardContent>
           </Card>
         </TabsContent>

@@ -211,13 +211,13 @@ const seedData = async () => {
       },
     ]);
 
-    // 4. Workers (Talents)
-    const workers = await User.create([
+    // 4. Talents
+    const talents = await User.create([
       {
         name: "Ahmed Hassan",
         email: "ahmed@example.com",
         password: "password123",
-        role: "worker",
+        role: "talent",
         headline: "Senior Full Stack Developer",
         bio: "Passionate developer with 5+ years of experience in MERN stack and Next.js. I love building scalable web applications.",
         location: "Hargeisa, Somaliland",
@@ -226,7 +226,7 @@ const seedData = async () => {
         name: "Sarah Ali",
         email: "sarah@example.com",
         password: "password123",
-        role: "worker",
+        role: "talent",
         headline: "UI/UX Designer & Brand Strategist",
         bio: "I craft user-friendly interfaces and memorable brand identities. Expert in Figma and Adobe Suite.",
         location: "Mogadishu, Somalia",
@@ -235,7 +235,7 @@ const seedData = async () => {
         name: "Mohamed Abdi",
         email: "mohamed@example.com",
         password: "password123",
-        role: "worker",
+        role: "talent",
         headline: "Data Scientist & Python Expert",
         bio: "Turning data into actionable insights. Proficient in Python, Pandas, and Machine Learning.",
         location: "Garowe, Puntland",
@@ -244,7 +244,7 @@ const seedData = async () => {
         name: "Khadra Yusuf",
         email: "khadra@example.com",
         password: "password123",
-        role: "worker",
+        role: "talent",
         headline: "Digital Marketing Specialist",
         bio: "Helping brands grow their online presence through SEO and social media strategies.",
         location: "Hargeisa, Somaliland",
@@ -253,14 +253,14 @@ const seedData = async () => {
         name: "Abdiqani Farah",
         email: "abdiqani@example.com",
         password: "password123",
-        role: "worker",
+        role: "talent",
         headline: "Project Manager",
         bio: "Certified PMP with experience in agile workflows.",
         location: "Djibouti",
       },
     ]);
     console.log(
-      `✅ Seeded ${employers.length} employers and ${workers.length} workers.`
+      `✅ Seeded ${employers.length} employers and ${talents.length} talents.`
     );
 
     console.log("------------------------------------------");
@@ -269,7 +269,7 @@ const seedData = async () => {
     // Ahmed (Worker 0) - Dev Skills
     // 1. React (Verified with Exam History)
     await UserSkill.create({
-      userId: workers[0]._id,
+      userId: talents[0]._id,
       skillId: skills[1]._id,
       score: 92,
       verified: true,
@@ -277,7 +277,7 @@ const seedData = async () => {
     // Create corresponding Exam Result
     await TaskResult.create({
       taskId: tasks[0]._id, // React Task
-      userId: workers[0]._id,
+      userId: talents[0]._id,
       score: 92,
       maxScore: 100,
       passed: true,
@@ -287,21 +287,21 @@ const seedData = async () => {
 
     // 2. JS (Verified Manual/Imported - No Exam in system yet)
     await UserSkill.create({
-      userId: workers[0]._id,
+      userId: talents[0]._id,
       skillId: skills[0]._id,
       score: 88,
       verified: true,
     });
     // 3. Node (Verified)
     await UserSkill.create({
-      userId: workers[0]._id,
+      userId: talents[0]._id,
       skillId: skills[2]._id,
       score: 85,
       verified: true,
     });
     // 4. TS (Unverified)
     await UserSkill.create({
-      userId: workers[0]._id,
+      userId: talents[0]._id,
       skillId: skills[3]._id,
       score: 75,
       verified: false,
@@ -310,14 +310,14 @@ const seedData = async () => {
     // Sarah (Worker 1) - Design Skills
     // 1. Figma (Verified with Exam History)
     await UserSkill.create({
-      userId: workers[1]._id,
+      userId: talents[1]._id,
       skillId: skills[5]._id,
       score: 95,
       verified: true,
     });
     await TaskResult.create({
       taskId: tasks[1]._id, // Figma Task
-      userId: workers[1]._id,
+      userId: talents[1]._id,
       score: 95,
       maxScore: 100,
       passed: true,
@@ -327,7 +327,7 @@ const seedData = async () => {
 
     // 2. UI/UX (Verified)
     await UserSkill.create({
-      userId: workers[1]._id,
+      userId: talents[1]._id,
       skillId: skills[6]._id,
       score: 90,
       verified: true,
@@ -335,13 +335,13 @@ const seedData = async () => {
 
     // Mohamed (Worker 2) - Data Skills
     await UserSkill.create([
-      { userId: workers[2]._id, skillId: skills[4]._id, score: 94, verified: true },
-      { userId: workers[2]._id, skillId: skills[9]._id, score: 89, verified: true },
+      { userId: talents[2]._id, skillId: skills[4]._id, score: 94, verified: true },
+      { userId: talents[2]._id, skillId: skills[9]._id, score: 89, verified: true },
     ]);
 
     // Khadra (Worker 3) - Marketing Skills
     await UserSkill.create([
-      { userId: workers[3]._id, skillId: skills[7]._id, score: 85, verified: true },
+      { userId: talents[3]._id, skillId: skills[7]._id, score: 85, verified: true },
     ]);
 
     console.log("✅ Seeded verified skills & exam history.");
@@ -416,7 +416,7 @@ const seedData = async () => {
 
     await Application.create({
       jobId: (await Job.findOne({ title: "Senior Frontend Engineer" }))?._id,
-      workerId: workers[0]._id, // Ahmed
+      talentId: talents[0]._id, // Ahmed
       coverLetter: "I am the perfect fit for this React role. I have 5 years experience.",
       resumeLink: "https://example.com/resume.pdf",
       status: "pending"
@@ -429,20 +429,20 @@ const seedData = async () => {
     await Feedback.create([
       {
         employerId: employers[0]._id,
-        workerId: workers[0]._id, // Ahmed
+        talentId: talents[0]._id, // Ahmed
         rating: 5,
         comment:
           "Ahmed is an exceptional developer. delivered the project ahead of schedule.",
       },
       {
         employerId: employers[1]._id,
-        workerId: workers[0]._id, // Ahmed
+        talentId: talents[0]._id, // Ahmed
         rating: 4,
         comment: "Great communication and solid code quality.",
       },
       {
         employerId: employers[1]._id,
-        workerId: workers[1]._id, // Sarah
+        talentId: talents[1]._id, // Sarah
         rating: 5,
         comment: "Sarah's designs are world-class. Highly recommended!",
       },

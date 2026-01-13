@@ -71,7 +71,7 @@ function LoginForm() {
 
       // Validate if the redirect path is appropriate for the user's role
       if (redirectPath) {
-        if (data.role === "worker" && !redirectPath.startsWith("/dashboard/worker") && !redirectPath.startsWith("/jobs") && !redirectPath.startsWith("/profile")) {
+        if (data.role === "talent" && !redirectPath.startsWith("/dashboard/talent") && !redirectPath.startsWith("/jobs") && !redirectPath.startsWith("/profile")) {
           targetPath = null;
         } else if (data.role === "employer" && !redirectPath.startsWith("/dashboard/employer") && !redirectPath.startsWith("/talents")) {
           targetPath = null;
@@ -93,7 +93,7 @@ function LoginForm() {
         } else if (data.role === "agent") {
           router.push("/dashboard/agent");
         } else {
-          router.push("/dashboard/worker");
+          router.push("/dashboard/talent");
         }
       }
     } catch (err: any) {

@@ -25,8 +25,8 @@ export default function VerificationJourney() {
             return;
         }
 
-        if (user?.role === "worker") {
-            router.push("/dashboard/worker?tab=verification");
+        if (user?.role === "talent") {
+            router.push("/dashboard/talent?tab=verification");
             return;
         }
 

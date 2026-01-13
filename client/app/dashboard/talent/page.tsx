@@ -40,7 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Suspense } from "react";
 
-function WorkerDashboardContent() {
+function TalentDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "skills";
@@ -58,8 +58,8 @@ function WorkerDashboardContent() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login?redirect=/dashboard/worker");
-      } else if (user.role !== "worker" && user.role !== "admin") {
+        router.push("/login?redirect=/dashboard/talent");
+      } else if (user.role !== "talent" && user.role !== "admin") {
         // Redirect if not worker
         if (user.role === "employer") router.push("/dashboard/employer");
         else if (user.role === "agent") router.push("/dashboard/agent");
@@ -320,10 +320,10 @@ function WorkerDashboardContent() {
   );
 }
 
-export default function WorkerDashboard() {
+export default function TalentDashboard() {
   return (
     <Suspense fallback={<div>Loading dashboard...</div>}>
-      <WorkerDashboardContent />
+      <TalentDashboardContent />
     </Suspense>
   );
 }

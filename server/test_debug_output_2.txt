@@ -1,0 +1,82 @@
+$ jest
+PASS tests/job.test.ts (9.811 s)
+  Job Endpoints
+    Job Workflow
+      ✓ should allow employer to create a job and verify it exists (426 ms)
+      ✓ should prevent talents from creating jobs (179 ms)
+
+  console.log
+    [SIMULATION] 📧 Sending verification request to boss@corp.com (WhatsApp/Email)...
+
+      at requestReferenceVerification (src/controllers/verificationController.ts:128:17)
+
+  console.log
+    [SIMULATION] ✅ Message sent! Now waiting for Agent Approval.
+
+      at requestReferenceVerification (src/controllers/verificationController.ts:129:17)
+
+PASS tests/agent.test.ts (9.957 s)
+  Agent Endpoints
+    ✓ should allow agent to view and approve verification requests (780 ms)
+
+PASS tests/verification.test.ts (10.064 s)
+  Verification Endpoints
+    ✓ should handle identity verification flow (596 ms)
+    ✓ should handle reference verification request (221 ms)
+
+PASS tests/user.test.ts (10.377 s)
+  User Endpoints
+    GET /api/users/profile
+      ✓ should return the logged in user profile (556 ms)
+      ✓ should fail without auth token (151 ms)
+    PUT /api/users/profile
+      ✓ should update user profile fields (159 ms)
+      ✓ should not update restricted fields directly if prevented (checking role) (144 ms)
+    GET /api/users/:id
+      ✓ should get public user profile without auth (128 ms)
+
+PASS tests/auth.test.ts (10.744 s)
+  Auth Endpoints
+    POST /api/auth/register
+      ✓ should register a new user successfully (644 ms)
+      ✓ should return 400 if user already exists (139 ms)
+    POST /api/auth/login
+      ✓ should login successfully with correct credentials (225 ms)
+      ✓ should fail with incorrect password (215 ms)
+
+  console.log
+    Apply Error: {
+      "message": "Application validation failed: jobId: Path `jobId` is required."
+    }
+
+      at Object.<anonymous> (tests/application.test.ts:65:54)
+
+FAIL tests/application.test.ts (12.164 s)
+  Job Application Endpoints
+    Application Flow
+      ✕ should allow talent to apply for a job and employer to view it (496 ms)
+
+  ● Job Application Endpoints › Application Flow › should allow talent to apply for a job and employer to view it
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: 201
+    Received: 500
+
+      64 |                 });
+      65 |             if (applyRes.statusCode !== 201) console.log('Apply Error:', JSON.stringify(applyRes.body, null, 2));
+    > 66 |             expect(applyRes.statusCode).toEqual(201);
+         |                                         ^
+      67 |             expect(applyRes.body.status).toEqual('pending');
+      68 |
+      69 |             // 4. Verify duplicate application fails
+
+      at Object.<anonymous> (tests/application.test.ts:66:41)
+
+Test Suites: 1 failed, 5 passed, 6 total
+Tests:       1 failed, 14 passed, 15 total
+Snapshots:   0 total
+Time:        13.357 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+error: script "test" exited with code 1

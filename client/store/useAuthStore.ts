@@ -4,7 +4,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: "worker" | "employer" | "admin" | "agent";
+  role: "talent" | "employer" | "admin" | "agent";
   verificationStage?: string;
 }
 

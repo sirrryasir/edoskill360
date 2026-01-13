@@ -4,7 +4,7 @@ import Job from "../models/Job";
 
 // @desc    Apply for a job
 // @route   POST /api/applications
-// @access  Private/Worker
+// @access  Private/Talent
 export const applyForJob = async (req: any, res: Response) => {
     try {
         const { jobId, coverLetter, resumeLink } = req.body;
@@ -20,7 +20,7 @@ export const applyForJob = async (req: any, res: Response) => {
 
         // Check availability
         // @ts-ignore
-        const existing = await Application.findOne({ jobId, workerId: req.user._id });
+        const existing = await Application.findOne({ jobId, talentId: req.user._id });
         if (existing) {
             return res.status(400).json({ message: "You have already applied to this job" });
         }
@@ -28,7 +28,7 @@ export const applyForJob = async (req: any, res: Response) => {
         const application = await Application.create({
             jobId,
             // @ts-ignore
-            workerId: req.user._id,
+            talentId: req.user._id,
             coverLetter,
             resumeLink
         });
@@ -55,7 +55,7 @@ export const getJobApplications = async (req: any, res: Response) => {
         }
 
         const applications = await Application.find({ jobId: req.params.jobId })
-            .populate("workerId", "name email headline location verificationStatus");
+            .populate("talentId", "name email headline location verificationStatus");
 
         res.json(applications);
     } catch (error) {
@@ -65,10 +65,10 @@ export const getJobApplications = async (req: any, res: Response) => {
 
 // @desc    Get my applications
 // @route   GET /api/applications/my
-// @access  Private/Worker
+// @access  Private/Talent
 export const getMyApplications = async (req: any, res: Response) => {
     try {
-        const applications = await Application.find({ workerId: req.user._id })
+        const applications = await Application.find({ talentId: req.user._id })
             .populate("jobId", "title companyName location");
 
         res.json(applications);

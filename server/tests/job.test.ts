@@ -53,19 +53,19 @@ describe('Job Endpoints', () => {
             expect(detailRes.body.title).toEqual(jobData.title);
         });
 
-        it('should prevent workers from creating jobs', async () => {
-            // Register a worker
-            const workerRes = await request(app).post('/api/auth/register').send({
+        it('should prevent talents from creating jobs', async () => {
+            // Register a talent
+            const talentRes = await request(app).post('/api/auth/register').send({
                 name: 'Job Failer',
                 email: 'failer@bee.com',
                 password: 'password',
-                role: 'worker'
+                role: 'talent'
             });
-            const workerCookie = workerRes.headers['set-cookie'] as unknown as string[];
+            const talentCookie = talentRes.headers['set-cookie'] as unknown as string[];
 
             const res = await request(app)
                 .post('/api/jobs')
-                .set('Cookie', workerCookie)
+                .set('Cookie', talentCookie)
                 .send(jobData);
 
             // Expect 401 or 403

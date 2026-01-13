@@ -2,8 +2,8 @@ import request from 'supertest';
 import app from '../src/app';
 
 describe('Job Application Endpoints', () => {
-    let workerToken: string;
-    let workerCookie: string[];
+    let talentToken: string;
+    let talentCookie: string[];
     let employerToken: string;
     let employerCookie: string[];
 
@@ -15,11 +15,11 @@ describe('Job Application Endpoints', () => {
         role: 'employer'
     };
 
-    const workerData = {
-        name: 'App Worker',
-        email: 'app.worker@example.com',
+    const talentData = {
+        name: 'App Talent',
+        email: 'app.talent@example.com',
         password: 'password123',
-        role: 'worker'
+        role: 'talent'
     };
 
     const jobData = {
@@ -32,7 +32,7 @@ describe('Job Application Endpoints', () => {
     };
 
     describe('Application Flow', () => {
-        it('should allow worker to apply for a job and employer to view it', async () => {
+        it('should allow talent to apply for a job and employer to view it', async () => {
             // 1. Register Users
             const empRes = await request(app).post('/api/auth/register').send({
                 ...employerData, email: 'emp1@test.com'
@@ -40,9 +40,9 @@ describe('Job Application Endpoints', () => {
             const empCookie = empRes.headers['set-cookie'] as unknown as string[];
 
             const workRes = await request(app).post('/api/auth/register').send({
-                ...workerData, email: 'work1@test.com'
+                ...talentData, email: 'work1@test.com'
             });
-            const workCookie = workRes.headers['set-cookie'] as unknown as string[];
+            const talentCookie = workRes.headers['set-cookie'] as unknown as string[];
 
             // 2. Create Job
             const jobRes = await request(app)
@@ -55,7 +55,7 @@ describe('Job Application Endpoints', () => {
             // 3. Worker Applies
             const applyRes = await request(app)
                 .post('/api/applications')
-                .set('Cookie', workCookie)
+                .set('Cookie', talentCookie)
                 .send({
                     jobId,
                     coverLetter: 'Hire me',
@@ -67,14 +67,14 @@ describe('Job Application Endpoints', () => {
             // 4. Verify duplicate application fails
             const dupRes = await request(app)
                 .post('/api/applications')
-                .set('Cookie', workCookie)
+                .set('Cookie', talentCookie)
                 .send({ jobId });
             expect(dupRes.statusCode).toEqual(400);
 
-            // 5. Worker views my applications
+            // 5. Talent views my applications
             const myAppsRes = await request(app)
                 .get('/api/applications/my')
-                .set('Cookie', workCookie);
+                .set('Cookie', talentCookie);
             expect(myAppsRes.statusCode).toEqual(200);
             expect(myAppsRes.body.length).toBeGreaterThan(0);
             expect(myAppsRes.body[0].jobId).toBeDefined();

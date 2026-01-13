@@ -42,7 +42,7 @@ interface Review {
   createdAt: string;
 }
 
-interface Worker {
+interface Talent {
   _id: string;
   name: string;
   headline: string;
@@ -54,29 +54,38 @@ interface Worker {
 
 interface PublicDataStore {
   jobs: Job[];
-  talents: Worker[];
+  talents: Talent[];
   currentJob: Job | null;
-  currentFreelancer: Worker | null;
+  currentTalent: Talent | null;
   isLoading: boolean;
   error: string | null;
   fetchJobs: (filters?: any) => Promise<void>;
   fetchTalents: (filters?: any) => Promise<void>;
   fetchJobById: (id: string) => Promise<void>;
-  fetchFreelancerById: (id: string) => Promise<void>;
+  fetchTalentById: (id: string) => Promise<void>;
 }
 
 export const usePublicDataStore = create<PublicDataStore>((set) => ({
   jobs: [],
   talents: [],
   currentJob: null,
-  currentFreelancer: null,
+  currentTalent: null,
   isLoading: false,
   error: null,
 
   fetchJobs: async (filters?: any) => {
     set({ isLoading: true, error: null });
     try {
-      const query = new URLSearchParams(filters).toString();
+      // Clean filters to remove undefined/null/empty values
+      const cleanFilters: any = {};
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            cleanFilters[key] = value;
+          }
+        });
+      }
+      const query = new URLSearchParams(cleanFilters).toString();
       const res = await fetch(`${API_URL}/jobs?${query}`);
       if (!res.ok) throw new Error("Failed to fetch jobs");
       const data = await res.json();
@@ -101,8 +110,17 @@ export const usePublicDataStore = create<PublicDataStore>((set) => ({
   fetchTalents: async (filters?: any) => {
     set({ isLoading: true, error: null });
     try {
-      const query = new URLSearchParams(filters).toString();
-      const res = await fetch(`${API_URL}/users/workers?${query}`);
+      // Clean filters to remove undefined/null/empty values
+      const cleanFilters: any = {};
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            cleanFilters[key] = value;
+          }
+        });
+      }
+      const query = new URLSearchParams(cleanFilters).toString();
+      const res = await fetch(`${API_URL}/users/talents?${query}`);
       if (!res.ok) throw new Error("Failed to fetch Talents");
       const data = await res.json();
       set({ talents: data, isLoading: false });
@@ -111,13 +129,13 @@ export const usePublicDataStore = create<PublicDataStore>((set) => ({
     }
   },
 
-  fetchFreelancerById: async (id: string) => {
-    set({ isLoading: true, error: null, currentFreelancer: null });
+  fetchTalentById: async (id: string) => {
+    set({ isLoading: true, error: null, currentTalent: null });
     try {
       const res = await fetch(`${API_URL}/users/${id}`);
-      if (!res.ok) throw new Error("Failed to fetch freelancer");
+      if (!res.ok) throw new Error("Failed to fetch talent");
       const data = await res.json();
-      set({ currentFreelancer: data, isLoading: false });
+      set({ currentTalent: data, isLoading: false });
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
     }

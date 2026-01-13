@@ -26,7 +26,7 @@ export default function PublicProfilePage({
 }) {
   const { id } = use(params);
   const { user, isLoading: authLoading } = useAuthStore();
-  const { currentFreelancer, fetchFreelancerById, isLoading, error } =
+  const { currentTalent, fetchTalentById, isLoading, error } =
     usePublicDataStore();
 
   useEffect(() => {
@@ -41,9 +41,9 @@ export default function PublicProfilePage({
     }
 
     if (profileId) {
-      fetchFreelancerById(profileId);
+      fetchTalentById(profileId);
     }
-  }, [id, fetchFreelancerById, user, authLoading]);
+  }, [id, fetchTalentById, user, authLoading]);
 
   if (isLoading) {
     return (
@@ -60,7 +60,7 @@ export default function PublicProfilePage({
     );
   }
 
-  if (error || !currentFreelancer) {
+  if (error || !currentTalent) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h2 className="text-xl font-semibold">User not found</h2>
@@ -73,7 +73,7 @@ export default function PublicProfilePage({
 
   // Robust check for verification
   // @ts-ignore
-  const isVerified = currentFreelancer.verificationStage === "VERIFIED";
+  const isVerified = currentTalent.verificationStage === "VERIFIED";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black/20 pb-20">
@@ -88,7 +88,7 @@ export default function PublicProfilePage({
           <div className="w-full md:w-80 shrink-0 space-y-6">
             <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg border p-6 text-center relative overflow-hidden">
               <div className="w-32 h-32 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full border-4 border-white dark:border-zinc-900 flex items-center justify-center text-4xl font-bold text-slate-400 mb-4 shadow-sm relative capitalize">
-                {currentFreelancer.name.substring(0, 2)}
+                {currentTalent.name.substring(0, 2)}
                 {isVerified && (
                   <div
                     className="absolute bottom-2 right-2 bg-white dark:bg-zinc-900 rounded-full p-1 shadow-sm"
@@ -100,11 +100,11 @@ export default function PublicProfilePage({
               </div>
 
               <h1 className="text-2xl font-bold mb-1 flex items-center justify-center gap-2">
-                {currentFreelancer.name}
+                {currentTalent.name}
                 {isVerified && <Badge variant="secondary" className="bg-green-100 text-green-700 h-6">Verified</Badge>}
               </h1>
               <p className="text-muted-foreground mb-4">
-                {currentFreelancer.headline || "Talent"}
+                {currentTalent.headline || "Talent"}
               </p>
 
               <div className="flex justify-center gap-1 mb-6">
@@ -115,21 +115,21 @@ export default function PublicProfilePage({
                   />
                 ))}
                 <span className="text-sm text-muted-foreground ml-2">
-                  ({currentFreelancer.reviews?.length || 0})
+                  ({currentTalent.reviews?.length || 0})
                 </span>
               </div>
 
               <div className="space-y-3 mb-6">
                 <Button
                   className="w-full bg-blue-600 hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20"
-                  onClick={() => window.location.href = `mailto:?subject=Hiring Inquiry: ${currentFreelancer.name}`}
+                  onClick={() => window.location.href = `mailto:?subject=Hiring Inquiry: ${currentTalent.name}`}
                 >
                   Hire Verified Talent
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => window.location.href = `mailto:?subject=Message for ${currentFreelancer.name}`}
+                  onClick={() => window.location.href = `mailto:?subject=Message for ${currentTalent.name}`}
                 >
                   Message
                 </Button>
@@ -138,7 +138,7 @@ export default function PublicProfilePage({
               <div className="border-t pt-6 text-left space-y-4 text-sm">
                 <div className="flex items-center text-muted-foreground">
                   <MapPin className="h-4 w-4 mr-3 text-slate-400" />
-                  {currentFreelancer.location || "Remote"}
+                  {currentTalent.location || "Remote"}
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <Mail className="h-4 w-4 mr-3 text-slate-400" />
@@ -177,7 +177,7 @@ export default function PublicProfilePage({
             <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border p-6 md:p-8">
               <h2 className="text-xl font-bold mb-4">About Me</h2>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {currentFreelancer.bio || "No bio available."}
+                {currentTalent.bio || "No bio available."}
               </p>
             </div>
 
@@ -194,9 +194,9 @@ export default function PublicProfilePage({
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {currentFreelancer.skills &&
-                  currentFreelancer.skills.length > 0 ? (
-                  currentFreelancer.skills.map((userSkill) => (
+                {currentTalent.skills &&
+                  currentTalent.skills.length > 0 ? (
+                  currentTalent.skills.map((userSkill) => (
                     <div key={userSkill._id} className="space-y-2">
                       <div className="flex justify-between font-medium">
                         <span className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export default function PublicProfilePage({
                       value="reviews"
                       className="bg-transparent text-muted-foreground data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none pb-3 px-1 transition-none"
                     >
-                      Reviews ({currentFreelancer.reviews?.length || 0})
+                      Reviews ({currentTalent.reviews?.length || 0})
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -270,9 +270,9 @@ export default function PublicProfilePage({
                   </TabsContent>
 
                   <TabsContent value="reviews" className="mt-0 space-y-6">
-                    {currentFreelancer.reviews &&
-                      currentFreelancer.reviews.length > 0 ? (
-                      currentFreelancer.reviews.map((review) => (
+                    {currentTalent.reviews &&
+                      currentTalent.reviews.length > 0 ? (
+                      currentTalent.reviews.map((review) => (
                         <div
                           key={review._id}
                           className="border-b last:border-0 pb-6 last:pb-0"

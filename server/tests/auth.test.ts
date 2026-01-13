@@ -10,7 +10,7 @@ describe('Auth Endpoints', () => {
         name: 'Test User',
         email: 'test@example.com',
         password: 'password123',
-        role: 'worker'
+        role: 'talent'
     };
 
     describe('POST /api/auth/register', () => {

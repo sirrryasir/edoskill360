@@ -5,18 +5,18 @@ describe('Verification Endpoints', () => {
 
     it('should handle identity verification flow', async () => {
         // 1. Register Worker
-        const workerRes = await request(app).post('/api/auth/register').send({
-            name: 'Verify Worker',
+        const talentRes = await request(app).post('/api/auth/register').send({
+            name: 'Verify Talent',
             email: 'verify.flow@example.com',
             password: 'password123',
-            role: 'worker'
+            role: 'talent'
         });
-        const workerCookie = workerRes.headers['set-cookie'] as unknown as string[];
+        const talentCookie = talentRes.headers['set-cookie'] as unknown as string[];
 
         // 2. Request Identity Verification
         const res = await request(app)
             .post('/api/verification/identity')
-            .set('Cookie', workerCookie)
+            .set('Cookie', talentCookie)
             .send({
                 identityProof: 'http://example.com/id.jpg'
             });
@@ -27,14 +27,14 @@ describe('Verification Endpoints', () => {
         // 3. Request without proof (Fail)
         const failRes = await request(app)
             .post('/api/verification/identity')
-            .set('Cookie', workerCookie)
+            .set('Cookie', talentCookie)
             .send({});
         expect(failRes.statusCode).toEqual(400);
 
         // 4. Check Status (Pending)
         const statusRes = await request(app)
             .get('/api/verification/status')
-            .set('Cookie', workerCookie);
+            .set('Cookie', talentCookie);
 
         expect(statusRes.statusCode).toEqual(200);
         expect(statusRes.body.verificationStatus.identity).toEqual('pending');
@@ -43,18 +43,18 @@ describe('Verification Endpoints', () => {
 
     it('should handle reference verification request', async () => {
         // 1. Register Worker
-        const workerRes = await request(app).post('/api/auth/register').send({
-            name: 'Ref Worker',
+        const talentRes = await request(app).post('/api/auth/register').send({
+            name: 'Ref Talent',
             email: 'ref.flow@example.com',
             password: 'password123',
-            role: 'worker'
+            role: 'talent'
         });
-        const workerCookie = workerRes.headers['set-cookie'] as unknown as string[];
+        const talentCookie = talentRes.headers['set-cookie'] as unknown as string[];
 
         // 2. Request Reference
         const res = await request(app)
             .post('/api/verification/references')
-            .set('Cookie', workerCookie)
+            .set('Cookie', talentCookie)
             .send({
                 name: 'Old Boss',
                 email: 'boss@corp.com',

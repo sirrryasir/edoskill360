@@ -38,16 +38,16 @@ export function Sidebar() {
   if (!user) return null;
 
   const roleLinks: Record<string, SidebarLink[]> = {
-    worker: [
-      { href: "/dashboard/worker", label: "Dashboard", icon: LayoutDashboard },
+    talent: [
+      { href: "/dashboard/talent", label: "Dashboard", icon: LayoutDashboard },
       { href: "/jobs", label: "Find Jobs", icon: Briefcase },
       {
-        href: "/dashboard/worker?tab=skills",
+        href: "/dashboard/talent?tab=skills",
         label: "My Skills",
         icon: CheckCircle,
       },
       {
-        href: "/dashboard/worker?tab=verification",
+        href: "/dashboard/talent?tab=verification",
         label: "Verification",
         icon: ShieldCheck,
       },

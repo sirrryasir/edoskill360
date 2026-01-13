@@ -29,7 +29,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
-import FreelancerCard from "@/components/FreelancerCard"; // Use the component which handles rendering well
+import TalentCard from "@/components/TalentCard"; // Use the component which handles rendering well
 import JobCard from "@/components/JobCard"; // Use the component which handles rendering well
 import { usePublicDataStore } from "@/store/usePublicDataStore";
 
@@ -232,68 +232,19 @@ export default function Home() {
               </div>
             ) : featuredTalents.length > 0 ? (
               featuredTalents.map((freelancer) => (
-                <Card
+                <TalentCard
                   key={freelancer._id}
-                  className="text-center hover:shadow-xl transition-all duration-300 group relative overflow-hidden border-zinc-200 dark:border-zinc-800"
-                >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
-                  <CardContent className="pt-8 pb-6">
-                    <div className="relative inline-block mb-4">
-                      <div className="w-20 h-20 rounded-full bg-zinc-100 mx-auto overflow-hidden">
-                        {/* Initials Avatar if no image, or generic image */}
-                        <div className="w-full h-full bg-gradient-to-br from-zinc-200 to-zinc-300 flex items-center justify-center text-2xl font-bold text-zinc-500">
-                          {freelancer.name
-                            .split(" ")
-                            .map((n: string) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </div>
-                      </div>
-                      {/* Verified Badge Check - mocked for now or checked against skills */}
-                      <div
-                        className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-sm border border-zinc-100"
-                        title="Verified"
-                      >
-                        <CheckCircle2 className="h-5 w-5 text-blue-500 fill-blue-50" />
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-lg mb-1 truncate px-2">
-                      {freelancer.name}
-                    </h3>
-                    <p className="text-sm text-zinc-500 mb-3 truncate px-2">
-                      {freelancer.headline || "Freelancer"}
-                    </p>
-
-                    <div className="flex justify-center items-center gap-1 mb-4 text-amber-500">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="font-bold text-foreground">5.0</span>
-                      <span className="text-muted-foreground text-xs ml-1">
-                        (Verified)
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap justify-center gap-2 mb-4 px-2 h-12 overflow-hidden">
-                      {/* Assuming skills are not populated fully yet, using placement placeholders or fetching user skills later */}
-                      {/* For now we just show a 'Verified Logic' badge or if we had skills populated */}
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] px-2 h-5"
-                      >
-                        Verified Pro
-                      </Badge>
-                    </div>
-
-                    <Link href={`/profile/${freelancer._id}`}>
-                      <Button
-                        size="sm"
-                        className="w-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-black"
-                      >
-                        View Profile
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+                  id={freelancer._id}
+                  name={freelancer.name}
+                  title={freelancer.headline || "Talent"}
+                  location={freelancer.location || "Remote"}
+                  rate="$45.00" // Placeholder until rate is in model
+                  verified={true} // Placeholder
+                  score={98} // Placeholder
+                  skills={["React", "Node.js", "TypeScript"]} // Placeholder
+                  reviews={15} // Placeholder
+                  rating={5.0} // Placeholder
+                />
               ))
             ) : (
               <div className="col-span-4 text-center py-10 text-muted-foreground">

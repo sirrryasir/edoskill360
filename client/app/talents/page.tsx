@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import FreelancerCard from "@/components/FreelancerCard";
+import TalentCard from "@/components/TalentCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -168,18 +168,18 @@ export default function TalentPage() {
             ) : talents.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {talents.slice(0, visibleCount).map((freelancer) => (
-                    <FreelancerCard
-                      key={freelancer._id}
-                      id={freelancer._id}
-                      name={freelancer.name}
-                      title={freelancer.headline || "Talent"}
-                      location={freelancer.location || "Remote"}
+                  {talents.slice(0, visibleCount).map((talent) => (
+                    <TalentCard
+                      key={talent._id}
+                      id={talent._id}
+                      name={talent.name}
+                      title={talent.headline || "Talent"}
+                      location={talent.location || "Remote"}
                       rate="$35/hr" // Mock value
                       // @ts-ignore
-                      verified={freelancer.verificationStage === "VERIFIED"} // Actual backend verified check
+                      verified={talent.verificationStage === "VERIFIED"} // Actual backend verified check
                       score={95} // Mock score or derive from skills if populated
-                      skills={freelancer.skills?.map(s => s.skillId.name).slice(0, 3) || []}
+                      skills={talent.skills?.map((s: any) => s.skillId.name).slice(0, 3) || []}
                       reviews={12} // Mock
                       rating={4.9} // Mock
                     />

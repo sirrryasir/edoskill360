@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IFeedback extends Document {
   employerId: mongoose.Types.ObjectId;
-  workerId: mongoose.Types.ObjectId;
+  talentId: mongoose.Types.ObjectId;
   jobId?: mongoose.Types.ObjectId; // Optional link to a specific job
   rating: number; // 1-5
   comment?: string;
@@ -16,7 +16,7 @@ const FeedbackSchema: Schema = new Schema(
       ref: "User",
       required: true,
     },
-    workerId: {
+    talentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,

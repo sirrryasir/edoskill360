@@ -10,7 +10,7 @@ import {
 import { CheckCircle2, Star, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-interface FreelancerCardProps {
+interface TalentCardProps {
   id: string;
   name: string;
   title: string;
@@ -23,7 +23,7 @@ interface FreelancerCardProps {
   rating: number;
 }
 
-export default function FreelancerCard({
+export default function TalentCard({
   id,
   name,
   title,
@@ -34,7 +34,7 @@ export default function FreelancerCard({
   skills,
   reviews,
   rating,
-}: FreelancerCardProps) {
+}: TalentCardProps) {
   return (
     <Card className="hover:shadow-lg transition-all duration-300 border-zinc-200 dark:border-zinc-800">
       <CardHeader className="text-center pb-2 relative">
