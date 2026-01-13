@@ -18,18 +18,27 @@ import {
 } from "@/components/ui/sheet";
 import { usePublicDataStore } from "@/store/usePublicDataStore";
 
-export default function FreelancersPage() {
+export default function TalentPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { freelancers, fetchFreelancers, isLoading } = usePublicDataStore();
+  const { talents, fetchTalents, isLoading } = usePublicDataStore();
   const [visibleCount, setVisibleCount] = useState(6);
+  const [verifiedOnly, setVerifiedOnly] = useState(true); // Default matching UI
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + 6);
   };
 
+  // Debounced Search & Filter Effect
   useEffect(() => {
-    fetchFreelancers();
-  }, [fetchFreelancers]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchTalents({
+        search: searchTerm,
+        verified: verifiedOnly
+      });
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, verifiedOnly, fetchTalents]);
 
   const FilterSidebar = () => (
     <div className="space-y-8">
@@ -41,7 +50,7 @@ export default function FreelancersPage() {
               <Checkbox id={`type-${type}`} />
               <Label
                 htmlFor={`type-${type}`}
-                className="font-normal cursor-pointer"
+                className="font-normal cursor-pointer text-slate-600 dark:text-slate-400"
               >
                 {type}
               </Label>
@@ -62,22 +71,15 @@ export default function FreelancersPage() {
       </div>
 
       <div>
-        <h3 className="font-semibold mb-4">Skill Score</h3>
-        <div className="space-y-4">
-          <Slider defaultValue={[70]} max={100} step={5} className="w-full" />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>0</span>
-            <span>100</span>
-          </div>
-        </div>
-      </div>
-
-      <div>
         <h3 className="font-semibold mb-4">Verification</h3>
         <div className="flex items-center space-x-2">
-          <Checkbox id="verified-only" defaultChecked />
-          <Label htmlFor="verified-only" className="font-normal cursor-pointer">
-            Verified Skills Only
+          <Checkbox
+            id="verified-only"
+            checked={verifiedOnly}
+            onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
+          />
+          <Label htmlFor="verified-only" className="font-medium cursor-pointer text-green-700 dark:text-green-400">
+            Verified Talent Only
           </Label>
         </div>
       </div>
@@ -90,9 +92,9 @@ export default function FreelancersPage() {
         {/* Header & Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Find Talent</h1>
+            <h1 className="text-3xl font-bold font-heading tracking-tight text-slate-900 dark:text-white">Find Verified Talent</h1>
             <p className="text-muted-foreground mt-1">
-              Found {freelancers.length} verified professionals
+              Found {talents.length} professionals ready to work.
             </p>
           </div>
 
@@ -141,6 +143,10 @@ export default function FreelancersPage() {
                   variant="ghost"
                   size="sm"
                   className="h-8 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setVerifiedOnly(false);
+                  }}
                 >
                   Reset
                 </Button>
@@ -153,30 +159,35 @@ export default function FreelancersPage() {
           <div className="col-span-1 md:col-span-3">
             {isLoading ? (
               <div className="text-center py-20 text-muted-foreground">
-                Loading talent...
+                <div className="animate-pulse flex flex-col items-center">
+                  <div className="h-4 w-32 bg-slate-200 rounded mb-4"></div>
+                  <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                </div>
+                <p className="mt-4">Loading top talent...</p>
               </div>
-            ) : freelancers.length > 0 ? (
+            ) : talents.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {freelancers.slice(0, visibleCount).map((freelancer) => (
+                  {talents.slice(0, visibleCount).map((freelancer) => (
                     <FreelancerCard
                       key={freelancer._id}
                       id={freelancer._id}
                       name={freelancer.name}
-                      title={freelancer.headline || "Freelancer"}
+                      title={freelancer.headline || "Talent"}
                       location={freelancer.location || "Remote"}
-                      rate="$35/hr" // Mock as it's not in User model yet
-                      verified={true} // Mock check
-                      score={90} // Mock score
-                      skills={["Verified Pro"]} // Needs aggregation
-                      reviews={10} // Mock
-                      rating={5.0} // Mock
+                      rate="$35/hr" // Mock value
+                      // @ts-ignore
+                      verified={freelancer.verificationStage === "VERIFIED"} // Actual backend verified check
+                      score={95} // Mock score or derive from skills if populated
+                      skills={freelancer.skills?.map(s => s.skillId.name).slice(0, 3) || []}
+                      reviews={12} // Mock
+                      rating={4.9} // Mock
                     />
                   ))}
                 </div>
 
                 {/* Pagination / Load More */}
-                {visibleCount < freelancers.length && (
+                {visibleCount < talents.length && (
                   <div className="pt-12 flex justify-center">
                     <Button
                       variant="outline"
@@ -184,14 +195,15 @@ export default function FreelancersPage() {
                       className="min-w-[200px]"
                       onClick={handleLoadMore}
                     >
-                      Load More Freelancers
+                      Load More Talent
                     </Button>
                   </div>
                 )}
               </>
             ) : (
               <div className="text-center py-20 bg-white dark:bg-slate-950 rounded-lg border border-dashed">
-                <p className="text-muted-foreground">No freelancers found.</p>
+                <p className="text-muted-foreground">No talent found matching your criteria.</p>
+                {verifiedOnly && <p className="text-sm text-yellow-600 mt-2">Try unchecking "Verified Talent Only" to see more results.</p>}
               </div>
             )}
           </div>

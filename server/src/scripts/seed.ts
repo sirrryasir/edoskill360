@@ -211,7 +211,7 @@ const seedData = async () => {
       },
     ]);
 
-    // 4. Workers (Freelancers)
+    // 4. Workers (Talents)
     const workers = await User.create([
       {
         name: "Ahmed Hassan",

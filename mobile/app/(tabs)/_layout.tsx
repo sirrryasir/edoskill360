@@ -1,24 +1,26 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-import { Home, Briefcase, User, Search } from 'lucide-react-native';
+import { Home, Briefcase, User, Search, Settings } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { user } = useAuthStore();
+  const themeColors = Colors[colorScheme ?? 'light'];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2563eb', // Blue primary
+        tabBarActiveTintColor: themeColors.tint,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
           },
           default: {},
@@ -31,11 +33,56 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
         }}
       />
+
+      {/* Jobs Tab - Visible for Everyone, but mainly Worker */}
+      <Tabs.Screen
+        name="jobs"
+        options={{
+          title: 'Jobs',
+          href: user?.role === 'employer' ? null : '/jobs', // Hide for employer if desired, or keep open
+          tabBarIcon: ({ color }) => <Briefcase size={24} color={color} />,
+        }}
+      />
+
+      {/* Talents Tab - Visible for Employer */}
+      <Tabs.Screen
+        name="Talents"
+        options={{
+          title: 'Talent',
+          href: user?.role === 'worker' ? null : '/Talents', // Hide for worker? Maybe keep visible for networking.
+          // Let's hide it for worker to match sidebar logic strictly, or keep it open. 
+          // Sidebar shows 'Find Jobs' for Worker, 'Find Talent' for Employer.
+          // Let's stick to sidebar logic to be safe.
+          // Actually, sidebar logic:
+          // Worker: Dashboard, Jobs, Skills, Verification, Profile
+          // Employer: Dashboard, Post Job, Find Talent
+
+          // So if user is worker, hide Talents tab?
+          // If user is employer, hide jobs tab?
+
+          // Let's refine based on user role presence.
+          // If user is null, we show default maybe?
+          // If user is worker -> Hide Talents
+          // If user is employer -> Hide Jobs (unless they want to see what's out there? Usually employers post jobs, not find them)
+
+          href: user?.role === 'employer' ? '/Talents' : null,
+          tabBarIcon: ({ color }) => <Search size={24} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+        }}
+      />
+
+      {/* Hide explore if we replaced it */}
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Jobs',
-          tabBarIcon: ({ color }) => <Briefcase size={24} color={color} />,
+          href: null,
         }}
       />
     </Tabs>

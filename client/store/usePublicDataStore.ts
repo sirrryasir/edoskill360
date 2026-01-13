@@ -54,29 +54,30 @@ interface Worker {
 
 interface PublicDataStore {
   jobs: Job[];
-  freelancers: Worker[];
+  talents: Worker[];
   currentJob: Job | null;
   currentFreelancer: Worker | null;
   isLoading: boolean;
   error: string | null;
-  fetchJobs: () => Promise<void>;
-  fetchFreelancers: () => Promise<void>;
+  fetchJobs: (filters?: any) => Promise<void>;
+  fetchTalents: (filters?: any) => Promise<void>;
   fetchJobById: (id: string) => Promise<void>;
   fetchFreelancerById: (id: string) => Promise<void>;
 }
 
 export const usePublicDataStore = create<PublicDataStore>((set) => ({
   jobs: [],
-  freelancers: [],
+  talents: [],
   currentJob: null,
   currentFreelancer: null,
   isLoading: false,
   error: null,
 
-  fetchJobs: async () => {
+  fetchJobs: async (filters?: any) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/jobs`);
+      const query = new URLSearchParams(filters).toString();
+      const res = await fetch(`${API_URL}/jobs?${query}`);
       if (!res.ok) throw new Error("Failed to fetch jobs");
       const data = await res.json();
       set({ jobs: data, isLoading: false });
@@ -97,13 +98,14 @@ export const usePublicDataStore = create<PublicDataStore>((set) => ({
     }
   },
 
-  fetchFreelancers: async () => {
+  fetchTalents: async (filters?: any) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/users/workers`);
-      if (!res.ok) throw new Error("Failed to fetch freelancers");
+      const query = new URLSearchParams(filters).toString();
+      const res = await fetch(`${API_URL}/users/workers?${query}`);
+      if (!res.ok) throw new Error("Failed to fetch Talents");
       const data = await res.json();
-      set({ freelancers: data, isLoading: false });
+      set({ talents: data, isLoading: false });
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
     }

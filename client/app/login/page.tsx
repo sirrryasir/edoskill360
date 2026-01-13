@@ -73,7 +73,7 @@ function LoginForm() {
       if (redirectPath) {
         if (data.role === "worker" && !redirectPath.startsWith("/dashboard/worker") && !redirectPath.startsWith("/jobs") && !redirectPath.startsWith("/profile")) {
           targetPath = null;
-        } else if (data.role === "employer" && !redirectPath.startsWith("/dashboard/employer") && !redirectPath.startsWith("/freelancers")) {
+        } else if (data.role === "employer" && !redirectPath.startsWith("/dashboard/employer") && !redirectPath.startsWith("/talents")) {
           targetPath = null;
         } else if (data.role === "admin" && !redirectPath.startsWith("/dashboard/admin")) {
           targetPath = null;

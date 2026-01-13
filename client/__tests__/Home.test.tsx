@@ -11,7 +11,7 @@ describe('Home Page', () => {
     it('renders without crashing', () => {
         render(<Home />)
         // Use text selector that matches actual content
-        const button = screen.getByText(/Browse Freelancers/i)
+        const button = screen.getByText(/Browse Talents/i)
         expect(button).toBeDefined()
     })
 })

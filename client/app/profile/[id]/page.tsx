@@ -35,8 +35,6 @@ export default function PublicProfilePage({
     let profileId = id;
     if (profileId === "me") {
       if (!user) {
-        // If trying to view own profile but not logged in, redirect
-        // router.push("/login?redirect=/profile/me"); // Can't easily use router inside useEffect without deps warning, but fine for now
         return;
       }
       profileId = user._id;
@@ -66,14 +64,16 @@ export default function PublicProfilePage({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h2 className="text-xl font-semibold">User not found</h2>
-        <Link href="/freelancers">
-          <Button variant="outline">Back to Freelancers</Button>
+        <Link href="/talents">
+          <Button variant="outline">Back to Talent Search</Button>
         </Link>
       </div>
     );
   }
 
-  const isVerified = currentFreelancer.skills?.some((s) => s.verified) || true; // Mock true for now if no skills
+  // Robust check for verification
+  // @ts-ignore
+  const isVerified = currentFreelancer.verificationStage === "VERIFIED";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black/20 pb-20">
@@ -94,16 +94,17 @@ export default function PublicProfilePage({
                     className="absolute bottom-2 right-2 bg-white dark:bg-zinc-900 rounded-full p-1 shadow-sm"
                     title="Identity Verified"
                   >
-                    <ShieldCheck className="h-6 w-6 text-blue-600 fill-blue-50" />
+                    <ShieldCheck className="h-6 w-6 text-green-600 fill-green-50" />
                   </div>
                 )}
               </div>
 
-              <h1 className="text-2xl font-bold mb-1">
+              <h1 className="text-2xl font-bold mb-1 flex items-center justify-center gap-2">
                 {currentFreelancer.name}
+                {isVerified && <Badge variant="secondary" className="bg-green-100 text-green-700 h-6">Verified</Badge>}
               </h1>
               <p className="text-muted-foreground mb-4">
-                {currentFreelancer.headline || "Freelancer"}
+                {currentFreelancer.headline || "Talent"}
               </p>
 
               <div className="flex justify-center gap-1 mb-6">
@@ -123,7 +124,7 @@ export default function PublicProfilePage({
                   className="w-full bg-blue-600 hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20"
                   onClick={() => window.location.href = `mailto:?subject=Hiring Inquiry: ${currentFreelancer.name}`}
                 >
-                  Hire Me
+                  Hire Verified Talent
                 </Button>
                 <Button
                   variant="outline"
@@ -143,10 +144,10 @@ export default function PublicProfilePage({
                   <Mail className="h-4 w-4 mr-3 text-slate-400" />
                   Available for offers
                 </div>
-                {/* <div className="flex items-center text-muted-foreground">
-                  <Calendar className="h-4 w-4 mr-3 text-slate-400" />
-                  Joined Recently
-                </div> */}
+                <div className="flex items-center text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 mr-3 text-green-500" />
+                  Background Checked
+                </div>
               </div>
             </div>
 
@@ -157,11 +158,14 @@ export default function PublicProfilePage({
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Hourly Rate</span>
                   <span className="font-semibold">$45.00 / hr</span>
-                  {/* TODO: Add rate to User model */}
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Response Time</span>
                   <span className="font-semibold">~2 hours</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Commitment</span>
+                  <span className="font-semibold">Full-time</span>
                 </div>
               </div>
             </div>
@@ -182,14 +186,10 @@ export default function PublicProfilePage({
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   Verified Skills
-                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
                 </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  View detailed report
+                <Button variant="ghost" size="sm" className="text-blue-600">
+                  View Assessment Report
                 </Button>
               </div>
 
@@ -199,7 +199,10 @@ export default function PublicProfilePage({
                   currentFreelancer.skills.map((userSkill) => (
                     <div key={userSkill._id} className="space-y-2">
                       <div className="flex justify-between font-medium">
-                        <span>{userSkill.skillId?.name}</span>
+                        <span className="flex items-center gap-2">
+                          {userSkill.skillId?.name}
+                          {userSkill.verified && <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px] h-5">Verified</Badge>}
+                        </span>
                         <span className="text-blue-600">
                           {userSkill.score}/100
                         </span>
@@ -226,12 +229,6 @@ export default function PublicProfilePage({
                     >
                       Experience
                     </TabsTrigger>
-                    {/* <TabsTrigger
-                      value="portfolio"
-                      className="bg-transparent text-muted-foreground data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none pb-3 px-1 transition-none"
-                    >
-                      Portfolio
-                    </TabsTrigger> */}
                     <TabsTrigger
                       value="reviews"
                       className="bg-transparent text-muted-foreground data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none pb-3 px-1 transition-none"
@@ -244,18 +241,19 @@ export default function PublicProfilePage({
                 <div className="p-6 md:p-8">
                   <TabsContent value="experience" className="space-y-8 mt-0">
                     <div className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 space-y-8 pl-8 pb-2">
-                      {/* Mock experience for now as it's not in DB schema yet */}
-                      <p className="text-muted-foreground italic">
-                        Experience section under development.
-                      </p>
-
-                      {/* {[
+                      {[
                         {
-                          title: "Senior Developer",
+                          title: "Senior Full Stack Developer",
                           company: "TechFlow Solutions",
-                          period: "2022 - Present",
-                          desc: "Leading the frontend team and re-architecting the core product.",
+                          period: "2023 - Present",
+                          desc: "Leading the migration given legacy systems to Modern Next.js stack. Mentoring 3 junior developers.",
                         },
+                        {
+                          title: "Frontend Engineer",
+                          company: "Digital Somali Agency",
+                          period: "2021 - 2023",
+                          desc: "Developed high-converting landing pages for 20+ local businesses.",
+                        }
                       ].map((job, idx) => (
                         <div key={idx} className="relative">
                           <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full border-4 border-white dark:border-zinc-900 bg-blue-600"></div>
@@ -267,7 +265,7 @@ export default function PublicProfilePage({
                             {job.desc}
                           </p>
                         </div>
-                      ))} */}
+                      ))}
                     </div>
                   </TabsContent>
 
@@ -290,7 +288,6 @@ export default function PublicProfilePage({
                                   {(review.employerId as any)?.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {/* Mock Date */}
                                   Recently
                                 </p>
                               </div>

@@ -87,10 +87,10 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-slate-400">
               <li>
                 <Link
-                  href="/freelancers"
-                  className="hover:text-blue-400 transition-colors"
+                  href="/talents"
+                  className="text-base text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
                 >
-                  Browse Freelancers
+                  Browse Talent
                 </Link>
               </li>
               <li>

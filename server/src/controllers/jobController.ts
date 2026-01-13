@@ -25,15 +25,37 @@ export const createJob = async (req: any, res: Response) => {
   }
 };
 
-// @desc    Get all jobs
+// @desc    Get all jobs with filters
 // @route   GET /api/jobs
 // @access  Public
 export const getJobs = async (req: Request, res: Response) => {
   try {
-    const jobs = await Job.find({ status: "open" }).populate(
+    const { search, type, location } = req.query;
+
+    const query: any = { status: "open" };
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { requirements: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (type) {
+      // Handle comma separated if needed, but for now exact match or single
+      query.type = type;
+    }
+
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    const jobs = await Job.find(query).populate(
       "employerId",
       "name companyName"
-    );
+    ).sort({ createdAt: -1 });
+
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });

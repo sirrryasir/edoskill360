@@ -237,10 +237,7 @@ export const startAssessment = async (req: any, res: Response) => {
     if (!task) return res.status(404).json({ message: "Task not found" });
 
     if (task.type === "ai-generated") {
-      if (!process.env.GEMINI_API_KEY) {
-        console.error("Missing GEMINI_API_KEY");
-        return res.status(500).json({ message: "AI Service Unavailable (Configuration Error)" });
-      }
+      // NOTE: Removed strict API Key check to allow usage of Static Question Bank fallback
 
       // @ts-ignore
       const skillName = task.skillId?.name || "General Technical";
@@ -291,58 +288,82 @@ export const startAssessment = async (req: any, res: Response) => {
 
 export const submitAIAssessment = async (req: any, res: Response) => {
   try {
-    const { resultId, answer } = req.body;
+    const { resultId, answer, answers } = req.body; // Accept 'answers' array if provided
     const result = await TaskResult.findById(resultId);
 
     if (!result) return res.status(404).json({ message: "Result session not found" });
     if (result.userId.toString() !== req.user._id.toString()) return res.status(401).json({ message: "Unauthorized" });
     if (result.status !== "pending") return res.status(400).json({ message: "Already submitted" });
 
-    // Parse question to get text
-    const questionObj = JSON.parse(result.generatedQuestion || "{}");
-    // @ts-ignore
-    const questionText = questionObj.question || "Unknown Question";
+    // Parse generated data
+    const genData = JSON.parse(result.generatedQuestion || "{}");
+    const questions = genData.questions || [genData]; // Handle both array and single object (legacy)
 
-    const evaluation = await evaluateSubmission(questionText, answer);
+    let totalScore = 0;
+    let combinedFeedback = "";
+    let allPassed = true;
+
+    // Handle multiple answers (new flow) or single answer (legacy flow)
+    const userAnswers = answers || [answer];
+
+    for (let i = 0; i < questions.length; i++) {
+      const qText = questions[i].question || "Unknown Question";
+      const userAns = userAnswers[i] || "";
+
+      const evaluation = await evaluateSubmission(qText, userAns);
+
+      totalScore += evaluation.score;
+      combinedFeedback += `Q${i + 1}: ${evaluation.feedback} `;
+      if (!evaluation.passed) allPassed = false;
+    }
+
+    // Average Score
+    const finalScore = Math.round(totalScore / questions.length);
+    const finalPassed = finalScore >= 60; // Overall pass threshold
 
     // Update Result
-    result.score = evaluation.score || 0;
-    result.aiFeedback = evaluation.feedback;
-    result.passed = evaluation.passed;
-    result.status = evaluation.passed ? "approved" : "rejected"; // Auto approve/reject based on AI
+    result.score = finalScore;
+    result.aiFeedback = combinedFeedback.trim();
+    result.passed = finalPassed;
+    result.status = finalPassed ? "approved" : "rejected";
     result.completedAt = new Date();
     // @ts-ignore
-    result.submissionText = answer;
+    result.submissionText = JSON.stringify(userAnswers); // Store all answers
 
     await result.save();
 
     // Update User Skill
-    if (result.passed) {
+    if (finalPassed) {
       const task = await Task.findById(result.taskId);
       if (task && task.skillId) {
         // Update UserSkill logic
         let userSkill = await UserSkill.findOne({ userId: req.user._id, skillId: task.skillId });
         if (userSkill) {
-          if (result.score > userSkill.score) userSkill.score = result.score;
+          if (finalScore > userSkill.score) userSkill.score = finalScore;
           userSkill.verified = true;
           await userSkill.save();
         } else {
-          await UserSkill.create({ userId: req.user._id, skillId: task.skillId, score: result.score, verified: true });
+          await UserSkill.create({ userId: req.user._id, skillId: task.skillId, score: finalScore, verified: true });
         }
 
         // IMPORTANT: Update Global User Verification Stage
-        // Fetch user to check current stage and update if needed
-        const User = (await import("../models/User")).default;
-        await User.findByIdAndUpdate(req.user._id, {
-          "verificationStatus.skills": "verified",
-          verificationStage: "SKILLS_EVALUATED" // Matches STAGES id in frontend
-        });
+        // Check if ALL claimed skills are verified
+        const allUserSkills = await UserSkill.find({ userId: req.user._id });
+        const allVerified = allUserSkills.every(s => s.verified);
+
+        if (allVerified) {
+          const User = (await import("../models/User")).default;
+          await User.findByIdAndUpdate(req.user._id, {
+            "verificationStatus.skills": "verified",
+            verificationStage: "SKILLS_EVALUATED"
+          });
+        }
       }
     }
 
     res.json({
-      score: result.score,
-      passed: result.passed,
+      score: finalScore,
+      passed: finalPassed,
       feedback: result.aiFeedback
     });
 

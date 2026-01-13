@@ -23,14 +23,33 @@ export default function JobsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { jobs, fetchJobs, isLoading } = usePublicDataStore();
   const [visibleCount, setVisibleCount] = useState(6);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + 6);
   };
 
+  // Debounced Filter Effect
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    const delayDebounceFn = setTimeout(() => {
+      // Simple filter logic: if multiple types, we might need multiple calls or backend $in. 
+      // For now, passing one or comma separated depending on backend.
+      // My backend logic: `query.type = type`. It supports single value. 
+      // We will send the LAST selected type or empty.
+      fetchJobs({
+        search: searchTerm,
+        type: selectedTypes.length > 0 ? selectedTypes[selectedTypes.length - 1] : undefined
+      });
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [fetchJobs, searchTerm, selectedTypes]);
+
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev => {
+      if (prev.includes(type)) return prev.filter(t => t !== type);
+      return [...prev, type];
+    });
+  };
 
   const FilterSidebar = () => (
     <div className="space-y-8">
@@ -45,7 +64,11 @@ export default function JobsPage() {
             "Internship",
           ].map((type) => (
             <div key={type} className="flex items-center space-x-2">
-              <Checkbox id={`type-${type}`} />
+              <Checkbox
+                id={`type-${type}`}
+                checked={selectedTypes.includes(type)}
+                onCheckedChange={() => toggleType(type)}
+              />
               <Label
                 htmlFor={`type-${type}`}
                 className="font-normal cursor-pointer"
@@ -77,6 +100,7 @@ export default function JobsPage() {
                 key={skill}
                 variant="outline"
                 className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={() => setSearchTerm(skill)}
               >
                 {skill}
               </Badge>
@@ -154,6 +178,10 @@ export default function JobsPage() {
                   variant="ghost"
                   size="sm"
                   className="h-8 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedTypes([]);
+                  }}
                 >
                   Reset
                 </Button>
@@ -166,7 +194,12 @@ export default function JobsPage() {
           <div className="col-span-1 md:col-span-3 space-y-4">
             {isLoading ? (
               <div className="text-center py-20 text-muted-foreground">
-                Loading jobs...
+                <div className="animate-pulse space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-40 bg-slate-200 rounded-xl"></div>
+                  ))}
+                </div>
+                <p className="mt-4">Loading jobs...</p>
               </div>
             ) : jobs.length > 0 ? (
               <>

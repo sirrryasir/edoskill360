@@ -64,7 +64,7 @@ export function Sidebar() {
         label: "Post a Job",
         icon: FileText,
       },
-      { href: "/freelancers", label: "Find Talent", icon: User },
+      { href: "/talents", label: "Find Talent", icon: User },
     ],
     admin: [
       { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },

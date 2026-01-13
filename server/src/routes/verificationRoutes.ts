@@ -4,6 +4,7 @@ import {
     getVerificationStatus,
     requestIdentityVerification,
     requestReferenceVerification,
+    finalizeVerification,
 } from "../controllers/verificationController";
 
 const router = express.Router();
@@ -20,10 +21,16 @@ router.get("/status", protect, getVerificationStatus);
 // @ts-ignore
 router.post("/identity", protect, requestIdentityVerification);
 
-// @route   POST /api/verification/reference
+// @route   POST /api/verification/references
 // @desc    Request Reference Verification
 // @access  Private
 // @ts-ignore
-router.post("/reference", protect, requestReferenceVerification);
+router.post("/references", protect, requestReferenceVerification);
+
+// @route   POST /api/verification/finalize
+// @desc    Finalize Verification (Step 4)
+// @access  Private
+// @ts-ignore
+router.post("/finalize", protect, finalizeVerification);
 
 export default router;

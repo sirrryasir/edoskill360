@@ -12,6 +12,9 @@ jest.setTimeout(300000);
 
 // Connect to the database before running any tests
 beforeAll(async () => {
+    // Increase internal startup timeout
+    process.env.MONGOMS_STARTUP_TIMEOUT = '60000';
+
     mongod = await MongoMemoryServer.create({
         instance: {
             dbName: 'testdb',

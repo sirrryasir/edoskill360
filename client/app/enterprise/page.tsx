@@ -68,7 +68,7 @@ export default function EnterprisePage() {
                                     </div>
                                     <h3 className="text-lg font-medium text-gray-900">Talent Pooling</h3>
                                     <p className="mt-2 text-base text-gray-500">
-                                        Build your own pipeline of pre-approved freelancers for quick project ramping.
+                                        Build your own pipeline of pre-approved Talents for quick project ramping.
                                     </p>
                                 </div>
 

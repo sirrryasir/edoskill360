@@ -53,7 +53,7 @@ describe('Verification Endpoints', () => {
 
         // 2. Request Reference
         const res = await request(app)
-            .post('/api/verification/reference')
+            .post('/api/verification/references')
             .set('Cookie', workerCookie)
             .send({
                 name: 'Old Boss',
@@ -63,6 +63,6 @@ describe('Verification Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(200);
-        expect(res.body.message).toContain('email sent');
+        expect(res.body.message).toContain('Reference request sent');
     });
 });

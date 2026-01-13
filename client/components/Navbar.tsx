@@ -33,7 +33,7 @@ export default function Navbar() {
   // Navigation Links
   const navLinks = [
     { name: "Jobs", href: "/jobs" },
-    { name: "Freelancers", href: "/freelancers" },
+    { name: "Talent", href: "/talents" },
     { name: "Verification", href: "/verification" }, // We'll likely remove this link later or redirect it
     { name: "How it Works", href: "/#how-it-works" },
   ];

@@ -1,51 +1,63 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import { create } from "zustand";
+import api from "@/config/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  role: string;
+  role: "worker" | "employer" | "admin" | "agent";
+  verificationStage?: string;
 }
 
 interface AuthState {
   user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  isLoading: boolean;
+  login: (userData: User) => void;
   logout: () => void;
+  checkAuth: () => Promise<void>;
 }
 
-// Fiiro gaar ah: Bedel IP-kan markaad emulator isticmaalayso (e.g. 10.0.2.2 for Android)
-const API_URL = 'http://localhost:5000/api'; 
-
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      login: async (email, password) => {
-        try {
-          // Halkan waxaan ku xiri doonaa backend-ka
-          // const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-          // set({ user: response.data.user, token: response.data.token });
-          
-          // Mock login for now
-          set({ 
-            user: { id: '1', name: 'Yaxye Ali', email, role: 'worker' },
-            token: 'mock-token-123'
-          });
-        } catch (error) {
-          console.error('Login error:', error);
-          throw error;
-        }
-      },
-      logout: () => set({ user: null, token: null }),
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isLoading: true,
+  login: async (userData) => {
+    set({ user: userData });
+    await AsyncStorage.setItem("user", JSON.stringify(userData));
+  },
+  logout: async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout failed", error);
     }
-  )
-);
+    set({ user: null });
+    await AsyncStorage.removeItem("user");
+  },
+  checkAuth: async () => {
+    try {
+      set({ isLoading: true });
+      // First check local storage for fast load
+      const storedUser = await AsyncStorage.getItem("user");
+      if (storedUser) {
+        set({ user: JSON.parse(storedUser) });
+      }
+
+      // Then verify with server
+      const res = await api.get("/users/profile");
+      if (res.data) {
+        set({ user: res.data, isLoading: false });
+        await AsyncStorage.setItem("user", JSON.stringify(res.data));
+      } else {
+        set({ user: null, isLoading: false });
+        await AsyncStorage.removeItem("user");
+      }
+    } catch (error) {
+      console.log("Check auth error:", error);
+      // If server is unreachable but we have stored user, maybe keep them logged in?
+      // For now, let's trust the storage if the network fails, or logout if it's a 401
+      // Ideally we check error.response.status
+      set({ isLoading: false });
+    }
+  },
+}));

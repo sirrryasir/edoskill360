@@ -34,17 +34,17 @@ import JobCard from "@/components/JobCard"; // Use the component which handles r
 import { usePublicDataStore } from "@/store/usePublicDataStore";
 
 export default function Home() {
-  const { jobs, freelancers, fetchJobs, fetchFreelancers, isLoading } =
+  const { jobs, talents, fetchJobs, fetchTalents, isLoading } =
     usePublicDataStore();
 
   useEffect(() => {
     fetchJobs();
-    fetchFreelancers();
-  }, [fetchJobs, fetchFreelancers]);
+    fetchTalents();
+  }, [fetchJobs, fetchTalents]);
 
   // Derived state for display - distinct from the full list pages
   const featuredJobs = jobs.slice(0, 3);
-  const featuredFreelancers = freelancers.slice(0, 4);
+  const featuredTalents = talents.slice(0, 4);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -81,13 +81,13 @@ export default function Home() {
                   <Briefcase className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link href="/freelancers" className="w-full sm:w-auto">
+              <Link href="/talents" className="w-full sm:w-auto">
                 <Button
                   size="xl"
                   variant="outline"
                   className="w-full h-14 px-8 text-lg font-bold border-2 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
                 >
-                  Browse Freelancers
+                  Browse Talents
                   <Search className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -204,13 +204,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Top Verified Freelancers (Real Data) */}
+      {/* Top Verified Talents (Real Data) */}
       <section className="py-24 bg-white dark:bg-black">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex justify-between items-end mb-12">
             <div className="max-w-2xl">
               <h2 className="text-3xl font-bold tracking-tight mb-4">
-                Top Verified Freelancers
+                Top Verified Talents
               </h2>
               <p className="text-lg text-zinc-500">
                 Hire professionals who have proven their skills through our
@@ -218,10 +218,10 @@ export default function Home() {
               </p>
             </div>
             <Link
-              href="/freelancers"
+              href="/talents"
               className="hidden md:inline-flex text-blue-600 font-semibold hover:underline items-center"
             >
-              View all freelancers <ChevronRight className="h-4 w-4 ml-1" />
+              View all Talents <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
           </div>
 
@@ -230,8 +230,8 @@ export default function Home() {
               <div className="col-span-4 text-center py-10 text-muted-foreground">
                 Loading talent...
               </div>
-            ) : featuredFreelancers.length > 0 ? (
-              featuredFreelancers.map((freelancer) => (
+            ) : featuredTalents.length > 0 ? (
+              featuredTalents.map((freelancer) => (
                 <Card
                   key={freelancer._id}
                   className="text-center hover:shadow-xl transition-all duration-300 group relative overflow-hidden border-zinc-200 dark:border-zinc-800"
@@ -297,14 +297,14 @@ export default function Home() {
               ))
             ) : (
               <div className="col-span-4 text-center py-10 text-muted-foreground">
-                No freelancers found.
+                No Talents found.
               </div>
             )}
           </div>
           <div className="mt-8 text-center md:hidden">
-            <Link href="/freelancers">
+            <Link href="/talents">
               <Button variant="outline" className="w-full">
-                View all freelancers
+                View all Talents
               </Button>
             </Link>
           </div>

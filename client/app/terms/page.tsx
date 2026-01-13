@@ -17,7 +17,7 @@ export default function TermsPage() {
                     <section>
                         <h2 className="text-xl font-bold text-gray-800 mb-2">2. Use of Services</h2>
                         <p className="text-gray-600">
-                            EduSkill360 provides a platform for skill verification and connecting freelancers with employers. You agree to use the platform only for lawful purposes and in accordance with these Terms.
+                            EduSkill360 provides a platform for skill verification and connecting Talents with employers. You agree to use the platform only for lawful purposes and in accordance with these Terms.
                         </p>
                     </section>
 

@@ -31,9 +31,9 @@ export default function TaskPage({
   const [taskType, setTaskType] = useState<"static" | "ai-generated">("static");
 
   // AI State
-  const [aiQuestion, setAiQuestion] = useState<any>(null);
+  const [aiQuestions, setAiQuestions] = useState<any[]>([]);
   const [resultId, setResultId] = useState<string | null>(null);
-  const [aiAnswer, setAiAnswer] = useState("");
+  const [aiAnswers, setAiAnswers] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Static Quiz State
@@ -74,7 +74,10 @@ export default function TaskPage({
         setResultId(data.resultId);
 
         if (data.type === 'ai-generated') {
-          setAiQuestion(data.generatedQuestion);
+          // Handle new array structure or legacy single object
+          const questions = data.generatedQuestion.questions || [data.generatedQuestion];
+          setAiQuestions(questions);
+          setAiAnswers(new Array(questions.length).fill(""));
           setTaskType('ai-generated');
         } else {
           setQuizQuestions(data.questions);
@@ -95,22 +98,29 @@ export default function TaskPage({
     setAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
   };
 
+  const handleAiAnswerChange = (index: number, val: string) => {
+    const newAnswers = [...aiAnswers];
+    newAnswers[index] = val;
+    setAiAnswers(newAnswers);
+  };
+
   const handleSubmit = async () => {
     if (!task) return;
     setIsSubmitting(true);
 
     try {
       if (taskType === 'ai-generated') {
-        if (!aiAnswer.trim()) return alert("Please provide an answer");
+        const hasEmpty = aiAnswers.some(a => !a.trim());
+        if (hasEmpty) return alert("Please answer all questions");
 
         const res = await fetch('/api/tasks/submit-ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resultId, answer: aiAnswer })
+          body: JSON.stringify({ resultId, answers: aiAnswers })
         });
 
         const data = await res.json();
-        setResult({ ...data, maxScore: task.maxScore }); // Ensure maxScore is available for display
+        setResult({ ...data, maxScore: task.maxScore });
       } else {
         // Static Quiz
         const formattedAnswers = Object.entries(answers).map(([qIdx, optIdx]) => ({
@@ -169,13 +179,13 @@ export default function TaskPage({
 
             {result.feedback && (
               <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-                <h4 className="font-bold mb-2">AI Feedback:</h4>
-                <p className="text-slate-600 dark:text-slate-300 italic">"{result.feedback}"</p>
+                <h4 className="font-bold mb-2">Feedback:</h4>
+                <p className="text-slate-600 dark:text-slate-300 italic text-sm whitespace-pre-line">{result.feedback}</p>
               </div>
             )}
 
-            <Button onClick={() => router.push("/dashboard/worker")}>
-              Return to Dashboard
+            <Button onClick={() => router.push("/dashboard/worker?tab=verification")} className="w-full">
+              Return to Verification
             </Button>
           </CardContent>
         </Card>
@@ -212,7 +222,7 @@ export default function TaskPage({
             </div>
             {task.type === 'ai-generated' && (
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded border border-blue-100 dark:border-blue-900 text-blue-800 dark:text-blue-300 text-sm">
-                <strong>Note:</strong> This is a unique, AI-generated assessment. You will receive a specific question or coding challenge generated just for you. Your answer will be evaluated by our AI system.
+                <strong>Note:</strong> This assessment consists of 3 unique, AI-generated questions. You must answer all of them to complete the validaton.
               </div>
             )}
           </CardContent>
@@ -234,32 +244,31 @@ export default function TaskPage({
         <Badge variant="outline">Timer: {task.timeLimit}:00</Badge>
       </div>
 
-      {taskType === 'ai-generated' && aiQuestion ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Challenge</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="prose dark:prose-invert max-w-none bg-slate-50 dark:bg-slate-800 p-6 rounded-lg border">
-              <p className="whitespace-pre-wrap text-lg font-medium">{aiQuestion.question}</p>
-              {aiQuestion.type === 'coding' && (
-                <div className="mt-4 text-xs text-slate-500">
-                  Write your code or solution in the box below.
+      {taskType === 'ai-generated' && aiQuestions.length > 0 ? (
+        <div className="space-y-6">
+          {aiQuestions.map((q, idx) => (
+            <Card key={idx}>
+              <CardHeader>
+                <CardTitle className="text-lg">Question {idx + 1}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="prose dark:prose-invert max-w-none bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
+                  <p className="whitespace-pre-wrap font-medium">{q.question}</p>
                 </div>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label>Your Answer / Code</Label>
-              <Textarea
-                placeholder="Type your answer here..."
-                className="min-h-[300px] font-mono"
-                value={aiAnswer}
-                onChange={(e) => setAiAnswer(e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label>Your Answer</Label>
+                  <Textarea
+                    placeholder="Type your answer here..."
+                    className="min-h-[150px] font-mono"
+                    value={aiAnswers[idx] || ""}
+                    onChange={(e) => handleAiAnswerChange(idx, e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
         <div className="space-y-6">
           {quizQuestions.map((q, qIdx) => (
@@ -276,15 +285,15 @@ export default function TaskPage({
                     <div
                       key={optIdx}
                       className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all ${answers[qIdx] === optIdx
-                          ? "border-primary bg-primary/5 dark:bg-primary/20"
-                          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800"
+                        ? "border-primary bg-primary/5 dark:bg-primary/20"
+                        : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                       onClick={() => handleOptionSelect(qIdx, optIdx)}
                     >
                       <div
                         className={`w-4 h-4 rounded-full border flex items-center justify-center ${answers[qIdx] === optIdx
-                            ? "border-primary bg-primary"
-                            : "border-gray-300"
+                          ? "border-primary bg-primary"
+                          : "border-gray-300"
                           }`}
                       >
                         {answers[qIdx] === optIdx && (

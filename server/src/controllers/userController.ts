@@ -58,14 +58,34 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-// @desc    Get all workers
+// @desc    Get all workers with filters
 // @route   GET /api/users/workers
-// @access  Private/Employer
+// @access  Private/Employer (Public in this context for "Find Talent")
 export const getWorkers = async (req: Request, res: Response) => {
   try {
-    const workers = await User.find({ role: "worker" }).select("-password");
-    // In a real app, we would aggregate with UserSkill to filter by skills here or on frontend
-    // For MVP, we fetch all workers and let frontend/other calls handle skill display
+    const { search, verified } = req.query;
+
+    const query: any = { role: "worker" };
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { headline: { $regex: search, $options: "i" } },
+        { "skills.name": { $regex: search, $options: "i" } }, // Basic join check attempt (won't work directly on User model without aggregate, keeping simple for now)
+      ];
+      // Note: For searching skills, we'd ideally aggregate. For MVP, we search name/headline.
+    }
+
+    if (verified === "true") {
+      query.verificationStage = "VERIFIED";
+    }
+
+    const workers = await User.find(query).select("-password").sort({
+      trustScore: -1, // Show high trust first
+      verificationStage: -1 // Show verified first (lexicographically V > U, mostly works)
+    });
+
+    // In a real app, populate skills here.
     res.json(workers);
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
