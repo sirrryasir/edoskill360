@@ -37,7 +37,7 @@ describe('Verification Endpoints', () => {
             .set('Cookie', talentCookie);
 
         expect(statusRes.statusCode).toEqual(200);
-        expect(statusRes.body.verificationStatus.identity).toEqual('pending');
+        expect(statusRes.body.verificationStage).toEqual('STAGE_1_PROFILE_COMPLETED');
         expect(statusRes.body.trustScore).toEqual(0);
     });
 

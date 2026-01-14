@@ -21,14 +21,21 @@ const VerificationSchema: Schema = new Schema(
         },
         type: {
             type: String,
-            enum: ["identity", "experience", "reference"],
+            enum: ["identity", "experience", "reference", "skill_task", "interview"], // Added skill_task and interview
             required: true,
+        },
+        stage: {
+            type: String,
+            enum: ["STAGE_1", "STAGE_2", "STAGE_3", "STAGE_4"],
+            required: true
         },
         status: {
             type: String,
             enum: ["pending", "approved", "rejected"],
             default: "pending",
         },
+        aiScore: { type: Number, default: 0 }, // Preliminary AI score
+        humanScore: { type: Number, default: 0 }, // Agent final score
         agentId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         reviewNotes: { type: String },
         data: { type: Schema.Types.Mixed },

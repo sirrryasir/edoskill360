@@ -69,7 +69,7 @@ describe('Agent Endpoints', () => {
             .get('/api/verification/status')
             .set('Cookie', talentCookie);
 
-        expect(statusRes.body.verificationStatus.identity).toEqual('verified');
+        expect(statusRes.body.verificationStage).toEqual('STAGE_2_SKILLS_SUBMITTED');
         expect(statusRes.body.trustScore).toEqual(20);
     });
 });

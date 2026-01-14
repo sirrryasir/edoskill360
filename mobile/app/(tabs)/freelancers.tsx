@@ -1,29 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
-import { Searchbar, Text } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FreelancerCard from '@/components/FreelancerCard';
+import { Search, Filter } from 'lucide-react-native';
+
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ThemedText } from '@/components/themed-text';
+import { Input } from '@/components/ui/Input';
+import FreelancerCard from '@/components/FreelancerCard';
 import api from '@/config/api';
 
-export default function TalentsScreen() {
+export default function FreelancersScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const [searchQuery, setSearchQuery] = useState('');
-  const [Talents, setTalents] = useState([]);
+  const [talents, setTalents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const colorScheme = useColorScheme() ?? 'light';
-  const themeColors = Colors[colorScheme];
 
   const fetchTalents = async () => {
     try {
-      // Assuming endpoint is /users/Talents based on context, 
-      // but checking web store it calls /api/users/Talents (implied) or similar.
-      // Wait, client uses usePublicDataStore.ts. Let's assume /users/Talents or similar.
-      // If endpoint fails, we will debug.
-      const res = await api.get('/users?role=worker'); // Or specific endpoint
+      // Fetch users with role 'talent'
+      const res = await api.get('/users?role=talent'); 
       setTalents(res.data);
     } catch (error) {
-      console.log('Error fetching Talents:', error);
+      console.log('Error fetching talents:', error);
     } finally {
       setLoading(false);
     }
@@ -33,51 +33,65 @@ export default function TalentsScreen() {
     fetchTalents();
   }, []);
 
-  const filteredTalents = Talents.filter((f: any) =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (f.headline && f.headline.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredTalents = talents.filter((t) => 
+    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.headline && t.headline.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Find Talent</Text>
+        <ThemedText type="headingL">Find Talent</ThemedText>
+        <TouchableOpacity style={[styles.filterButton, { borderColor: theme.border }]}>
+          <Filter size={20} color={theme.text} />
+        </TouchableOpacity>
       </View>
 
-      <Searchbar
-        placeholder="Search Talents..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-        style={styles.searchBar}
-      />
+      <View style={styles.searchContainer}>
+        <Input 
+          placeholder="Search by name or skill..." 
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          icon={<Search size={20} color={theme.textSecondary} />}
+          style={{ backgroundColor: theme.card }}
+        />
+      </View>
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={themeColors.primary} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
         <FlatList
           data={filteredTalents}
-          keyExtractor={(item: any) => item._id}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <FreelancerCard
               id={item._id}
               name={item.name}
-              title={item.headline || "Freelancer"}
+              title={item.headline || "Talent"}
               location={item.location || "Remote"}
               rate={item.hourlyRate ? `$${item.hourlyRate}` : "Negotiable"}
-              verified={true} // Mock logic for now
-              score={85} // Mock logic
-              skills={item.skills || []}
-              reviews={0}
-              rating={5.0}
+              verified={item.trustScore > 50} // Logic for verified badge
+              score={item.trustScore || 0}
+              skills={item.skills || []} // Assuming populated or handled
+              reviews={0} // Mock for now
+              rating={0} // Mock for now
             />
           )}
-          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <View style={{ marginBottom: 16 }}>
+               <ThemedText type="defaultSemiBold" style={{ color: theme.textSecondary }}>
+                 Top Verified Professionals
+               </ThemedText>
+            </View>
+          }
           ListEmptyComponent={
-            <Text style={{ textAlign: 'center', marginTop: 20, color: themeColors.icon }}>
-              No Talents found.
-            </Text>
+            <View style={styles.centered}>
+              <ThemedText style={{ color: theme.textSecondary }}>No talent found.</ThemedText>
+            </View>
           }
         />
       )}
@@ -90,25 +104,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  searchBar: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+  filterButton: {
+    width: 40,
+    height: 40,
     borderRadius: 12,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    padding: 20,
+    paddingBottom: 100,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
 });

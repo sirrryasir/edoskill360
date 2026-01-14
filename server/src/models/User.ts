@@ -13,26 +13,21 @@ export interface IUser extends Document {
   updatedAt: Date;
   // Verification Fields
   trustScore: number;
-  verificationStatus: {
-    identity: "unverified" | "pending" | "verified";
-    skills: "unverified" | "partial" | "verified";
-    experience: "unverified" | "partial" | "verified";
-    references: "unverified" | "partial" | "verified";
+  trustScoreBreakdown: {
+    identity: number; // Max 20
+    skills: number;   // Max 40
+    interview: number; // Max 20
+    references: number; // Max 20
   };
-  identityProof?: string; // URL to ID image
   verificationStage:
-  | "UNVERIFIED"
-  | "PROFILE_COMPLETED"
-  | "IDENTITY_SUBMITTED"
-  | "IDENTITY_APPROVED"
-  | "IDENTITY_REJECTED"
-  | "SKILLS_TESTING"
-  | "SKILLS_EVALUATED"
-  | "AI_VALIDATION_PASSED"
-  | "REFERENCES_PENDING"
-  | "REFERENCES_VERIFIED"
-  | "VERIFIED"
+  | "STAGE_0_UNVERIFIED"
+  | "STAGE_1_PROFILE_COMPLETED"
+  | "STAGE_2_SKILLS_SUBMITTED"
+  | "STAGE_3_INTERVIEW_COMPLETED"
+  | "STAGE_4_REFERENCES_PENDING"
+  | "STAGE_5_VERIFIED"
   | "REJECTED";
+  identityProof?: string;
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -51,54 +46,33 @@ const UserSchema: Schema = new Schema(
     location: { type: String },
     // Verification Fields
     trustScore: { type: Number, default: 0 },
-    verificationStatus: {
-      identity: {
-        type: String,
-        enum: ["unverified", "pending", "verified"],
-        default: "unverified",
-      },
-      skills: {
-        type: String,
-        enum: ["unverified", "partial", "verified"],
-        default: "unverified",
-      },
-      experience: {
-        type: String,
-        enum: ["unverified", "partial", "verified"],
-        default: "unverified",
-      },
-      references: {
-        type: String,
-        enum: ["unverified", "partial", "verified"],
-        default: "unverified",
-      },
+    trustScoreBreakdown: {
+      identity: { type: Number, default: 0 },
+      skills: { type: Number, default: 0 },
+      interview: { type: Number, default: 0 },
+      references: { type: Number, default: 0 },
     },
-    identityProof: { type: String },
     verificationStage: {
       type: String,
       enum: [
-        "UNVERIFIED",
-        "PROFILE_COMPLETED",
-        "IDENTITY_SUBMITTED",
-        "IDENTITY_APPROVED",
-        "IDENTITY_REJECTED",
-        "SKILLS_TESTING",
-        "SKILLS_EVALUATED",
-        "AI_VALIDATION_PASSED",
-        "REFERENCES_PENDING",
-        "REFERENCES_VERIFIED",
-        "VERIFIED",
+        "STAGE_0_UNVERIFIED",
+        "STAGE_1_PROFILE_COMPLETED",
+        "STAGE_2_SKILLS_SUBMITTED",
+        "STAGE_3_INTERVIEW_COMPLETED",
+        "STAGE_4_REFERENCES_PENDING",
+        "STAGE_5_VERIFIED",
         "REJECTED",
       ],
-      default: "UNVERIFIED",
+      default: "STAGE_0_UNVERIFIED",
     },
+    identityProof: { type: String },
   },
   { timestamps: true }
 );
 
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
 
   const salt = await bcrypt.genSalt(10);

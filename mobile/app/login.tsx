@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { TextInput, Button, ActivityIndicator, useTheme } from 'react-native-paper';
+import { ShieldCheck, Mail, Lock } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useAuthStore } from '@/store/useAuthStore';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '@/config/api';
+
+import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuthStore();
   const colorScheme = useColorScheme() ?? 'light';
-  const themeColors = Colors[colorScheme];
+  const theme = Colors[colorScheme];
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,91 +25,87 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Missing Information', 'Please provide both email and password.');
       return;
     }
 
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email, password });
-      
       const data = res.data;
       login(data);
-
-      Alert.alert("Success", "Logged in successfully");
       router.replace('/(tabs)');
-      
     } catch (error: any) {
-      console.log("Login error:", error);
-      const message = error.response?.data?.message || "Login failed. Please check your credentials.";
-      Alert.alert('Login Failed', message);
+      const message = error.response?.data?.message || "Please check your credentials and try again.";
+      Alert.alert('Authentication Failed', message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerContainer}>
-            <View style={styles.logoContainer}>
-               <Text style={[styles.logoText, { color: themeColors.primary }]}>EduSkill360</Text>
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={[styles.logoBadge, { backgroundColor: theme.primary + '15' }]}>
+              <ShieldCheck size={48} color={theme.primary} />
             </View>
-            <Text style={[styles.title, { color: themeColors.text }]}>Welcome Back</Text>
-            <Text style={[styles.subtitle, { color: themeColors.icon }]}>Sign in to continue to your dashboard</Text>
+            <ThemedText type="headingXL" align="center" style={styles.title}>
+              EduSkill360
+            </ThemedText>
+            <ThemedText type="default" align="center" style={{ color: theme.textSecondary }}>
+              Professional Verification & Talent Platform
+            </ThemedText>
           </View>
 
-          <View style={styles.formContainer}>
-            <TextInput
-              label="Email"
+          {/* Form Section */}
+          <View style={styles.form}>
+            <Input
+              label="Work Email"
               value={email}
               onChangeText={setEmail}
-              mode="outlined"
-              autoCapitalize="none"
+              placeholder="name@company.com"
               keyboardType="email-address"
-              style={styles.input}
-              outlineColor={themeColors.border}
-              activeOutlineColor={themeColors.primary}
-              textColor={themeColors.text}
-              theme={{ colors: { onSurfaceVariant: themeColors.icon } }} 
+              autoCapitalize="none"
+              icon={<Mail size={20} color={theme.icon} />}
             />
             
-            <TextInput
+            <Input
               label="Password"
               value={password}
               onChangeText={setPassword}
-              mode="outlined"
+              placeholder="Enter your password"
               secureTextEntry
-              style={styles.input}
-              outlineColor={themeColors.border}
-              activeOutlineColor={themeColors.primary}
-              textColor={themeColors.text}
-              theme={{ colors: { onSurfaceVariant: themeColors.icon } }}
+              icon={<Lock size={20} color={theme.icon} />}
             />
 
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>Forgot Password?</Text>
+              <ThemedText type="defaultSemiBold" style={{ color: theme.primary }}>
+                Forgot Password?
+              </ThemedText>
             </TouchableOpacity>
 
             <Button 
-              mode="contained" 
-              onPress={handleLogin} 
+              title="Secure Sign In"
+              onPress={handleLogin}
               loading={loading}
-              disabled={loading}
-              style={[styles.button, { backgroundColor: themeColors.primary }]}
-              labelStyle={styles.buttonLabel}
-            >
-              Sign In
-            </Button>
+              fullWidth
+              size="lg"
+            />
 
             <View style={styles.footer}>
-              <Text style={{ color: themeColors.icon }}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => Alert.alert("Coming Soon", "Registration not yet implemented on mobile")}>
-                <Text style={[styles.link, { color: themeColors.primary }]}>Sign Up</Text>
+              <ThemedText style={{ color: theme.textSecondary }}>
+                New to EduSkill360?{' '}
+              </ThemedText>
+              <TouchableOpacity onPress={() => Alert.alert("Registration", "Please visit our website to create a verified professional account.")}>
+                <ThemedText type="defaultSemiBold" style={{ color: theme.primary }}>
+                  Apply for Access
+                </ThemedText>
               </TouchableOpacity>
             </View>
           </View>
@@ -123,55 +124,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
-  headerContainer: {
+  header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 48,
   },
-  logoContainer: {
-    marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  logoBadge: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  formContainer: {
+  form: {
     width: '100%',
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: 'transparent',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontWeight: '600',
-  },
-  button: {
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    paddingVertical: 2,
+    marginBottom: 32,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
-  },
-  link: {
-    fontWeight: 'bold',
+    marginTop: 32,
   },
 });

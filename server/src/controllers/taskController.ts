@@ -4,7 +4,7 @@ import Task from "../models/Task";
 import Skill from "../models/Skill";
 import TaskResult from "../models/TaskResult";
 import UserSkill from "../models/UserSkill";
-import { generateTask, evaluateSubmission } from "../services/aiService";
+import { generateSkillQuiz, evaluateSubmission } from "../services/aiService";
 
 // @desc    Create a new task
 // @route   POST /api/tasks
@@ -243,7 +243,14 @@ export const startAssessment = async (req: any, res: Response) => {
       const skillName = task.skillId?.name || "General Technical";
 
       try {
-        const generatedParam = await generateTask(skillName, task.difficulty);
+        // Use generateSkillQuiz which returns { questions: [], source: "..." }
+        const quizResult = await generateSkillQuiz(skillName, task.difficulty);
+
+        // Ensure we store it in a format submitAIAssessment expects
+        const generatedParam = {
+          questions: quizResult.questions,
+          source: quizResult.source
+        };
 
         // Create a pending result to track this specific instance
         const result = await TaskResult.create({

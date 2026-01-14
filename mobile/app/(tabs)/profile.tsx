@@ -1,107 +1,130 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Avatar, Title, Caption, Button, List, Divider, Text, useTheme } from 'react-native-paper';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Settings, Share2, ShieldCheck, MapPin, Briefcase, LogOut } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+
 import { useAuthStore } from '@/store/useAuthStore';
+import { useSkillStore } from '@/store/useSkillStore';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Mail, ShieldCheck, MapPin, Briefcase, LogOut } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { ThemedText } from '@/components/themed-text';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
+  const { userSkills, fetchUserSkills } = useSkillStore();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const router = useRouter();
-  const colorScheme = useColorScheme() ?? 'light';
-  const themeColors = Colors[colorScheme];
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", style: "destructive", onPress: () => {
-            logout();
-            router.replace('/login');
-        }}
-      ]
-    );
+  useEffect(() => {
+    fetchUserSkills();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserSkills();
+    setRefreshing(false);
   };
 
-  if (!user) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <Text>Not logged in</Text>
-      </View>
-    );
-  }
+  const handleLogout = async () => {
+      await logout();
+      router.replace('/login');
+  };
+
+  if (!user) return null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <ScrollView>
-        <View style={styles.userInfoSection}>
-          <View style={{ flexDirection: 'row', marginTop: 15 }}>
-            <Avatar.Text 
-              size={80} 
-              label={user.name.substring(0, 2).toUpperCase()} 
-              style={{ backgroundColor: themeColors.primary }}
-            />
-            <View style={{ marginLeft: 20 }}>
-              <Title style={[styles.title, { marginTop: 15, marginBottom: 5, color: themeColors.text }]}>
-                {user.name}
-              </Title>
-              <Caption style={styles.caption}>{user.email}</Caption>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <ThemedText type="headingM">Profile</ThemedText>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <TouchableOpacity onPress={handleLogout}>
+            <LogOut size={24} color={theme.error} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView 
+        contentContainerStyle={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {/* Profile Card */}
+        <Card style={styles.profileCard} padding="lg">
+          <View style={styles.profileHeader}>
+            <View style={[styles.avatarPlaceholder, { backgroundColor: theme.primary }]}>
+                <ThemedText type="headingXL" style={{ color: 'white' }}>
+                    {user.name.charAt(0).toUpperCase()}
+                </ThemedText>
+            </View>
+            <View style={styles.profileInfo}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <ThemedText type="headingL">{user.name}</ThemedText>
+                <ShieldCheck size={20} color={theme.success} />
+              </View>
+              <ThemedText style={{ color: theme.textSecondary, marginBottom: 4 }}>
+                {user.headline || (user.role === 'talent' ? 'Skilled Professional' : 'Employer')}
+              </ThemedText>
+              <View style={styles.locationRow}>
+                <MapPin size={14} color={theme.textSecondary} />
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: 4 }}>
+                  {user.location || 'Remote'}
+                </ThemedText>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.userInfoSection}>
-          <View style={styles.row}>
-            <Briefcase color={themeColors.icon} size={20} />
-            <Text style={{ color: themeColors.icon, marginLeft: 20 }}>Role: <Text style={{fontWeight:'bold', color: themeColors.text}}>{user.role.toUpperCase()}</Text></Text>
+          <View style={[styles.trustSummary, { backgroundColor: theme.background }]}>
+            <View style={styles.trustItem}>
+              <ThemedText type="headingL" style={{ color: theme.primary }}>{user.trustScore || 0}</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>Trust Score</ThemedText>
+            </View>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <View style={styles.trustItem}>
+              <ThemedText type="headingL" style={{ color: theme.text }}>12</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>Jobs Done</ThemedText>
+            </View>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <View style={styles.trustItem}>
+              <ThemedText type="headingL" style={{ color: theme.text }}>4.8</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>Rating</ThemedText>
+            </View>
           </View>
-          <View style={styles.row}>
-            <ShieldCheck color={themeColors.icon} size={20} />
-            <Text style={{ color: themeColors.icon, marginLeft: 20 }}>Verified User</Text>
-          </View>
-          {/* Mock data for now as user object might be minimal */}
-          <View style={styles.row}>
-            <MapPin color={themeColors.icon} size={20} />
-            <Text style={{ color: themeColors.icon, marginLeft: 20 }}>Mogadishu, Somalia</Text>
-          </View>
-        </View>
+        </Card>
 
-        <Divider />
+        {/* Verified Skills */}
+        {user.role === 'talent' && (
+            <View style={styles.section}>
+            <ThemedText type="headingM" style={{ marginBottom: 12 }}>Verified Skills</ThemedText>
+            <View style={styles.skillsContainer}>
+                {userSkills.length > 0 ? (
+                    userSkills.map((us) => (
+                        <Badge 
+                            key={us._id} 
+                            text={us.skillId.name} 
+                            status={us.verified ? 'success' : 'warning'} 
+                            icon={us.verified ? <ShieldCheck size={12} color={theme.success} /> : undefined} 
+                        />
+                    ))
+                ) : (
+                    <ThemedText style={{ color: theme.textSecondary }}>No skills added yet.</ThemedText>
+                )}
+            </View>
+            </View>
+        )}
 
-        <List.Section>
-          <List.Subheader>Settings</List.Subheader>
-          <List.Item
-            title="Edit Profile"
-            left={() => <List.Icon icon="account-edit" />}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="Notifications"
-            left={() => <List.Icon icon="bell-outline" />}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="Security"
-            left={() => <List.Icon icon="shield-check-outline" />}
-            onPress={() => {}}
-          />
-        </List.Section>
-        
-        <View style={styles.buttonSection}>
-           <Button 
-            mode="outlined" 
-            onPress={handleLogout} 
-            textColor={Colors.light.error}
-            style={{ borderColor: Colors.light.error }}
-            icon={() => <LogOut size={18} color={Colors.light.error} />}
-           >
-             Logout
-           </Button>
+        {/* Experience / Portfolio (Placeholder) */}
+        <View style={styles.section}>
+          <ThemedText type="headingM" style={{ marginBottom: 12 }}>Bio</ThemedText>
+          <Card padding="md">
+             <ThemedText style={{ color: theme.textSecondary }}>
+                 {user.bio || "No bio available. Please edit your profile to add more details."}
+             </ThemedText>
+          </Card>
         </View>
 
       </ScrollView>
@@ -113,29 +136,63 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centered: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  profileCard: {
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  userInfoSection: {
-    paddingHorizontal: 30,
-    marginBottom: 25,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  caption: {
-    fontSize: 14,
-    lineHeight: 14,
-    fontWeight: '500',
-  },
-  row: {
-    flexDirection: 'row',
-    marginBottom: 10,
+  profileInfo: {
     alignItems: 'center',
   },
-  buttonSection: {
-    padding: 20,
-  }
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  trustSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+  },
+  trustItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  divider: {
+    width: 1,
+    height: '80%',
+    alignSelf: 'center',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  skillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
 });

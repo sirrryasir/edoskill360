@@ -1,159 +1,149 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { Card, Title, Text, Button, Avatar } from 'react-native-paper';
+import React, { useEffect } from 'react';
+import { StyleSheet, View, ScrollView, RefreshControl, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Bell, Search, ShieldCheck } from 'lucide-react-native';
+
 import { useAuthStore } from '@/store/useAuthStore';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Briefcase, ShieldCheck, CheckCircle, FileText, User } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { ThemedText } from '@/components/themed-text';
+import { TrustScoreCard } from '@/components/TrustScoreCard';
+import { VerificationStepper } from '@/components/VerificationStepper';
+import { Card } from '@/components/ui/Card';
 
 export default function DashboardScreen() {
-  const { user } = useAuthStore();
-  const colorScheme = useColorScheme() ?? 'light';
-  const themeColors = Colors[colorScheme];
+  const { user, checkAuth } = useAuthStore();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    // Refresh logic here
-    setTimeout(() => setRefreshing(false), 1000);
+  useEffect(() => {
+    checkAuth();
   }, []);
 
-  if (!user) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await checkAuth();
+    setRefreshing(false);
+  }, []);
 
-  const isWorker = user.role === 'worker';
-  const isEmployer = user.role === 'employer';
+  // Map user verification stage to steps
+  const getStepStatus = (stepId: string) => {
+    // Basic mapping logic based on user.verificationStage
+    // enum: STAGE_0_UNVERIFIED, STAGE_1_PROFILE_COMPLETED, STAGE_2_SKILLS_SUBMITTED, etc.
+    if (!user) return 'locked';
+    
+    // Identity Step (1)
+    if (stepId === '1') return user.verificationStage !== 'STAGE_0_UNVERIFIED' ? 'completed' : 'current';
+    
+    // Skills Step (2)
+    if (stepId === '2') {
+        if (user.verificationStage === 'STAGE_0_UNVERIFIED') return 'locked';
+        if (user.verificationStage === 'STAGE_1_PROFILE_COMPLETED') return 'current';
+        return 'completed';
+    }
+
+    // Background/Interview Step (3)
+    if (stepId === '3') {
+        if (user.verificationStage === 'STAGE_2_SKILLS_SUBMITTED') return 'current';
+        if (['STAGE_3_INTERVIEW_COMPLETED', 'STAGE_4_REFERENCES_PENDING', 'STAGE_5_VERIFIED'].includes(user.verificationStage || '')) return 'completed';
+        return 'locked';
+    }
+
+    // Vouched/Final Step (4)
+    if (stepId === '4') {
+        if (user.verificationStage === 'STAGE_5_VERIFIED') return 'completed';
+        if (user.verificationStage === 'STAGE_4_REFERENCES_PENDING') return 'current';
+        return 'locked';
+    }
+
+    return 'locked';
+  };
+
+  const steps = [
+    { id: '1', title: 'Identity', status: getStepStatus('1') as any },
+    { id: '2', title: 'Skills', status: getStepStatus('2') as any },
+    { id: '3', title: 'Interview', status: getStepStatus('3') as any },
+    { id: '4', title: 'Verified', status: getStepStatus('4') as any },
+  ];
+
+  if (!user) return null;
+
+  const isWorker = user.role === 'talent' || user.role === 'worker'; // Handle both naming conventions
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={{ fontSize: 16, color: themeColors.icon }}>Welcome back,</Text>
-          <Title style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.text }}>{user.name}</Title>
+        <View style={styles.headerLeft}>
+          <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
+              <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
+                  {user.name.charAt(0).toUpperCase()}
+              </ThemedText>
+          </View>
+          <View>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>Good Morning,</ThemedText>
+            <ThemedText type="headingM">{user.name.split(' ')[0]}</ThemedText>
+          </View>
         </View>
-        <Avatar.Text size={48} label={user.name.substring(0, 2).toUpperCase()} style={{ backgroundColor: themeColors.primary }} />
+        <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Bell size={20} color={theme.text} />
+          <View style={[styles.badgeDot, { backgroundColor: theme.error }]} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Quick Actions / Stats */}
-        <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { backgroundColor: themeColors.card }]}>
-            <Card.Content style={styles.statContent}>
-              <Text style={[styles.statValue, { color: themeColors.primary }]}>
-                {isWorker ? '85' : '12'}
-              </Text>
-              <Text style={[styles.statLabel, { color: themeColors.icon }]}>
-                {isWorker ? 'Skill Score' : 'Active Jobs'}
-              </Text>
-            </Card.Content>
-          </Card>
-          <Card style={[styles.statCard, { backgroundColor: themeColors.card }]}>
-            <Card.Content style={styles.statContent}>
-              <Text style={[styles.statValue, { color: themeColors.primary }]}>
-                {isWorker ? '3' : '45'}
-              </Text>
-              <Text style={[styles.statLabel, { color: themeColors.icon }]}>
-                {isWorker ? 'Active Jobs' : 'Applicants'}
-              </Text>
-            </Card.Content>
-          </Card>
-        </View>
+        {/* Trust Score Section */}
+        <TrustScoreCard score={user.trustScore || 0} role={user.role} />
 
-        {/* Action Cards */}
+        {/* Verification Path */}
+        <VerificationStepper steps={steps} />
+
+        {/* Action Grid */}
         <View style={styles.section}>
-          <Title style={[styles.sectionTitle, { color: themeColors.text }]}>Quick Actions</Title>
-
-          {isWorker && (
-            <>
-              <TouchableOpacity onPress={() => router.push('/jobs')}>
-                <Card style={[styles.actionCard, { backgroundColor: themeColors.card }]}>
-                  <Card.Content style={styles.actionContent}>
-                    <View style={[styles.iconBox, { backgroundColor: '#eff6ff' }]}>
-                      <Briefcase size={24} color={Colors.light.primary} />
-                    </View>
-                    <View style={styles.actionText}>
-                      <Title style={{ fontSize: 16 }}>Find Jobs</Title>
-                      <Text style={{ fontSize: 12, color: themeColors.icon }}>Browse latest opportunities</Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => router.push('/profile')}>
-                <Card style={[styles.actionCard, { backgroundColor: themeColors.card }]}>
-                  <Card.Content style={styles.actionContent}>
-                    <View style={[styles.iconBox, { backgroundColor: '#f0fdf4' }]}>
-                      <ShieldCheck size={24} color="#16a34a" />
-                    </View>
-                    <View style={styles.actionText}>
-                      <Title style={{ fontSize: 16 }}>Verify Skills</Title>
-                      <Text style={{ fontSize: 12, color: themeColors.icon }}>Take assessments to boost trust</Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {isEmployer && (
-            <>
-              <TouchableOpacity onPress={() => router.push('/Talents')}>
-                <Card style={[styles.actionCard, { backgroundColor: themeColors.card }]}>
-                  <Card.Content style={styles.actionContent}>
-                    <View style={[styles.iconBox, { backgroundColor: '#eff6ff' }]}>
-                      <User size={24} color={Colors.light.primary} />
-                    </View>
-                    <View style={styles.actionText}>
-                      <Title style={{ fontSize: 16 }}>Find Talent</Title>
-                      <Text style={{ fontSize: 12, color: themeColors.icon }}>Search for verified Talents</Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => { /* Navigate to Post Job */ }}>
-                <Card style={[styles.actionCard, { backgroundColor: themeColors.card }]}>
-                  <Card.Content style={styles.actionContent}>
-                    <View style={[styles.iconBox, { backgroundColor: '#f5f3ff' }]}>
-                      <FileText size={24} color="#7c3aed" />
-                    </View>
-                    <View style={styles.actionText}>
-                      <Title style={{ fontSize: 16 }}>Post a Job</Title>
-                      <Text style={{ fontSize: 12, color: themeColors.icon }}>Create a new job listing</Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-
-        {/* Verification Status (Worker) */}
-        {isWorker && (
-          <View style={styles.section}>
-            <Title style={[styles.sectionTitle, { color: themeColors.text }]}>Verification Status</Title>
-            <Card style={[styles.verificationCard, { backgroundColor: themeColors.primary }]}>
-              <Card.Content style={styles.verificationContent}>
-                <View>
-                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>Identity Verified</Text>
-                  <Text style={{ color: '#bfdbfe', fontSize: 12 }}>You are a trusted member</Text>
+          <ThemedText type="headingM" style={{ marginBottom: 12 }}>
+            {isWorker ? 'Find Opportunities' : 'Manage Talent'}
+          </ThemedText>
+          
+          <View style={styles.grid}>
+            <TouchableOpacity 
+              style={[styles.gridItem]} 
+              onPress={() => router.push(isWorker ? '/jobs' : '/(tabs)/freelancers')}
+            >
+              <Card style={styles.actionCard} padding="md">
+                <View style={[styles.actionIcon, { backgroundColor: theme.primary + '15' }]}>
+                  <Search size={24} color={theme.primary} />
                 </View>
-                <CheckCircle size={32} color="white" />
-              </Card.Content>
-            </Card>
+                <ThemedText type="defaultSemiBold">
+                  {isWorker ? 'Find Jobs' : 'Find Talent'}
+                </ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  {isWorker ? 'Browse verified listings' : 'Hire verified pros'}
+                </ThemedText>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.gridItem]} onPress={() => router.push('/profile')}>
+              <Card style={styles.actionCard} padding="md">
+                <View style={[styles.actionIcon, { backgroundColor: theme.success + '15' }]}>
+                  <ShieldCheck size={24} color={theme.success} />
+                </View>
+                <ThemedText type="defaultSemiBold">
+                  My Verifications
+                </ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  Check status
+                </ThemedText>
+              </Card>
+            </TouchableOpacity>
           </View>
-        )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -163,74 +153,68 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
+    marginBottom: 8,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  badgeDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'white',
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 15,
-    marginBottom: 25,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 12,
-  },
-  statContent: {
-    alignItems: 'center',
-    paddingVertical: 15,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontSize: 12,
+    paddingBottom: 40,
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 15,
-    fontWeight: 'bold',
+  grid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  gridItem: {
+    flex: 1,
   },
   actionCard: {
-    marginBottom: 12,
-    borderRadius: 12,
+    height: 140,
+    justifyContent: 'space-between',
   },
-  actionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconBox: {
+  actionIcon: {
     width: 48,
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginBottom: 8,
   },
-  actionText: {
-    flex: 1,
-  },
-  verificationCard: {
-    borderRadius: 12,
-  },
-  verificationContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  }
 });

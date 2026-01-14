@@ -7,15 +7,62 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-export const generateTask = async (skill: string, difficulty: string) => {
-    // ALWAYS use Mock/Static bank for now as per requirements
-    // This allows consistency and "3 questions" rule without relying on AI prompt engineering instability
-    const questions = getQuestionsForSkill(skill, 3);
+export const generateSkillQuiz = async (skill: string, difficulty: string) => {
+    try {
+        if (!process.env.GEMINI_API_KEY) throw new Error("No API Key");
 
-    return {
-        questions: questions,
-        source: "static-bank"
-    };
+        const prompt = `Generate a 5-question multiple-choice quiz for the skill "${skill}" at "${difficulty}" level.
+        Format the output as a strictly valid JSON array of objects with this structure:
+        [
+          {
+            "question": "string",
+            "options": ["string", "string", "string", "string"],
+            "correctOption": number (0-3)
+          }
+        ]
+        Do not include markdown formatting like \`\`\`json. Return only the raw JSON string.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        const questions = JSON.parse(cleanedText);
+
+        return {
+            questions,
+            source: "ai-generated"
+        };
+
+    } catch (error) {
+        console.error("AI Quiz Gen Error:", error);
+        // Fallback to static questions
+        const questions = getQuestionsForSkill(skill, 3);
+        return {
+            questions: questions,
+            source: "static-fallback"
+        };
+    }
+};
+
+export const generateInterviewQuestions = async (profileContext: string) => {
+    try {
+        if (!process.env.GEMINI_API_KEY) throw new Error("No API Key");
+
+        const prompt = `Generate 3 technical interview questions for a candidate with this profile summary:
+        ${profileContext}
+        Focus on validating their claims. Return as a JSON array of strings.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        return JSON.parse(cleanedText);
+    } catch (error) {
+        console.error("AI Interview Gen Error:", error);
+        return [
+            "Could you describe a challenging project you worked on?",
+            "How do you handle debugging in your preferred language?",
+            "Explain a core concept in your field of expertise."
+        ];
+    }
 };
 
 export const generateBio = async (userData: any) => {

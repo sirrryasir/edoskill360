@@ -1,63 +1,25 @@
 import { Request, Response } from "express";
 import User from "../models/User";
 import Verification from "../models/Verification";
+import { generateSkillQuiz, generateInterviewQuestions } from "../services/aiService";
+import { VerificationService } from "../services/VerificationService";
 
 // Get user verification status and calculate Trust Score
 export const getVerificationStatus = async (req: Request, res: Response) => {
     try {
         // @ts-ignore
-        const user = await User.findById(req.user._id).select("-password");
+        const userId = req.user._id;
+
+        // Use Service to ensure score is up to date based on current stage/status
+        const user = await VerificationService.updateTrustScore(userId);
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Calculate Trust Score
-        // Formula: Identity (20%) + Skills (40%) + Experience (25%) + References (15%)
-        let score = 0;
-        const breakdown = {
-            identity: 0,
-            skills: 0,
-            experience: 0,
-            references: 0
-        };
-
-        if (user.verificationStatus.identity === "verified") {
-            score += 20;
-            breakdown.identity = 20;
-        }
-
-        if (user.verificationStatus.skills === "verified") {
-            score += 40;
-            breakdown.skills = 40;
-        } else if (user.verificationStatus.skills === "partial") {
-            score += 20; // Partial credit for skills
-            breakdown.skills = 20;
-        }
-
-        if (user.verificationStatus.experience === "verified") {
-            score += 25;
-            breakdown.experience = 25;
-        } else if (user.verificationStatus.experience === "partial") {
-            score += 10;
-            breakdown.experience = 10;
-        }
-
-        if (user.verificationStatus.references === "verified") {
-            score += 15;
-            breakdown.references = 15;
-        }
-
-        // Update user if score changed
-        if (user.trustScore !== score) {
-            user.trustScore = score;
-            await user.save();
-        }
-
         res.json({
-            trustScore: score,
-            scoreBreakdown: breakdown,
-            verificationStatus: user.verificationStatus,
+            trustScore: user.trustScore,
+            scoreBreakdown: user.trustScoreBreakdown,
             verificationStage: user.verificationStage,
             identityProof: user.identityProof
         });
@@ -82,13 +44,14 @@ export const requestIdentityVerification = async (req: Request, res: Response) =
             userId,
             type: "identity",
             status: "pending",
+            stage: "STAGE_2", // Mapping Identity to Stage 2 context or prerequisite for Stage 2
             data: { identityProof }
         });
 
         // Update User Status
+        // We do strictly update verificationStage if they were UNVERIFIED
         await User.findByIdAndUpdate(userId, {
-            "verificationStatus.identity": "pending",
-            "verificationStage": "IDENTITY_SUBMITTED",
+            verificationStage: "STAGE_1_PROFILE_COMPLETED", // Assuming Identity upload completes profile
             identityProof
         });
 
@@ -110,23 +73,21 @@ export const requestReferenceVerification = async (req: Request, res: Response) 
         }
 
         // Create Verification Record
-        // Status 'pending' now implies "Waiting for Agent to Review" after the "Email/WhatsApp" is sent
         await Verification.create({
             userId,
             type: "reference",
             status: "pending",
+            stage: "STAGE_4",
             data: { name, email, relationship, company }
         });
 
-        // Update User Status (Trigger partial if not already)
+        // Update User Status
         await User.findByIdAndUpdate(userId, {
-            "verificationStatus.references": "pending",
-            "verificationStage": "REFERENCES_PENDING"
+            verificationStage: "STAGE_4_REFERENCES_PENDING"
         });
 
         // SIMULATION: Sending Message
         console.log(`[SIMULATION] 📧 Sending verification request to ${email} (WhatsApp/Email)...`);
-        console.log(`[SIMULATION] ✅ Message sent! Now waiting for Agent Approval.`);
 
         res.status(200).json({ message: "Reference request sent. Pending Agent review." });
     } catch (error) {
@@ -142,14 +103,83 @@ export const finalizeVerification = async (req: Request, res: Response) => {
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Basic Check: Are we at the right stage?
-        // Note: In a real app we'd strict check all flags. For now, trusting flow.
+        // Update to Final Stage
+        user.verificationStage = "STAGE_5_VERIFIED";
 
-        user.verificationStage = "VERIFIED";
-        user.trustScore = 100; // Boost to max or calculate
         await user.save();
 
-        res.json({ message: "Verification completed successfully!", status: user.verificationStage });
+        // Recalculate score via service
+        const updatedUser = await VerificationService.updateTrustScore(user.id);
+
+        res.json({ message: "Verification completed successfully!", status: updatedUser?.verificationStage });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
+// Generate AI Quiz
+export const generateAIQuiz = async (req: Request, res: Response) => {
+    try {
+        const { skill, difficulty } = req.body;
+        if (!skill) return res.status(400).json({ message: "Skill is required" });
+
+        const result = await generateSkillQuiz(skill, difficulty || "intermediate");
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to generate quiz", error });
+    }
+};
+
+// Generate AI Interview Questions
+export const generateAIInterview = async (req: Request, res: Response) => {
+    try {
+        // @ts-ignore
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const profileContext = `
+             Name: ${user.name}
+             Headline: ${user.headline}
+             Bio: ${user.bio}
+             Role: ${user.role}
+         `;
+
+        const questions = await generateInterviewQuestions(profileContext);
+        res.json({ questions });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to generate check", error });
+    }
+};
+
+// Submit Interview (Completes Stage 3)
+export const submitInterview = async (req: Request, res: Response) => {
+    try {
+        const { answers } = req.body; // Array of { question, answer }
+        // @ts-ignore
+        const userId = req.user._id;
+
+        // Save verification record
+        await Verification.create({
+            userId,
+            type: "interview",
+            status: "pending", // Agent will review
+            stage: "STAGE_3",
+            data: { answers }
+        });
+
+        // Update Stage
+        // We move them to STAGE_3_INTERVIEW_COMPLETED
+        // This unlocks points for Skills (40) and Interview (20) in our TrustScore logic? 
+        // Logic: passedSkills = [STAGE_3...].includes(stage). Yes.
+
+        await User.findByIdAndUpdate(userId, {
+            verificationStage: "STAGE_3_INTERVIEW_COMPLETED"
+        });
+
+        // Recalculate Score
+        await VerificationService.updateTrustScore(userId);
+
+        res.json({ message: "Interview submitted successfully!" });
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
     }

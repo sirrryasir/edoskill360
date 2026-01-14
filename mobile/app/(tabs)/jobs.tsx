@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
-import { Searchbar, Text } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import JobCard from '@/components/JobCard';
+import { Search, Filter } from 'lucide-react-native';
+
+import { useAuthStore } from '@/store/useAuthStore';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ThemedText } from '@/components/themed-text';
+import { Input } from '@/components/ui/Input';
+import JobCard from '@/components/JobCard';
 import api from '@/config/api';
 
 export default function JobsScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const [searchQuery, setSearchQuery] = useState('');
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const colorScheme = useColorScheme() ?? 'light';
-  const themeColors = Colors[colorScheme];
 
   const fetchJobs = async () => {
     try {
@@ -29,52 +33,66 @@ export default function JobsScreen() {
     fetchJobs();
   }, []);
 
-  const filteredJobs = jobs.filter((job: any) => 
+  const filteredJobs = jobs.filter((job) => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Find Jobs</Text>
+        <ThemedText type="headingL">Explore Jobs</ThemedText>
+        <TouchableOpacity style={[styles.filterButton, { borderColor: theme.border }]}>
+          <Filter size={20} color={theme.text} />
+        </TouchableOpacity>
       </View>
-      
-      <Searchbar
-        placeholder="Search for jobs..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-        style={styles.searchBar}
-        inputStyle={{ color: themeColors.text }}
-      />
+
+      <View style={styles.searchContainer}>
+        <Input 
+          placeholder="Search for roles, skills..." 
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          icon={<Search size={20} color={theme.textSecondary} />}
+          style={{ backgroundColor: theme.card }}
+        />
+      </View>
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={themeColors.primary} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
         <FlatList
           data={filteredJobs}
-          keyExtractor={(item: any) => item._id}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <JobCard
               id={item._id}
               title={item.title}
-              company={item.employerId?.companyName || "Unknown"}
-              location={item.location}
-              type={item.type}
-              salary={item.salaryRange}
-              postedAt="Recently" // You might want to format date here
+              company={item.employerId?.name || "Verified Employer"}
+              location={item.location || "Remote"}
+              type={item.type || "Contract"}
+              salary={item.budget ? `$${item.budget}` : "Negotiable"}
+              postedAt={new Date(item.createdAt).toLocaleDateString()}
               description={item.description}
-              skills={item.requirements}
-              isVerifiedHost={false}
+              skills={item.skills || []}
+              isVerifiedHost={true} // Assuming posted by verified user logic
+              trustScoreRequired={item.minTrustScore}
             />
           )}
-          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <View style={{ marginBottom: 16 }}>
+               <ThemedText type="defaultSemiBold" style={{ color: theme.textSecondary }}>
+                 {filteredJobs.length} Verified Opportunities
+               </ThemedText>
+            </View>
+          }
           ListEmptyComponent={
-            <Text style={{ textAlign: 'center', marginTop: 20, color: themeColors.icon }}>
-              No jobs found.
-            </Text>
+            <View style={styles.centered}>
+              <ThemedText style={{ color: theme.textSecondary }}>No jobs found matching your criteria.</ThemedText>
+            </View>
           }
         />
       )}
@@ -87,25 +105,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  searchBar: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+  filterButton: {
+    width: 40,
+    height: 40,
     borderRadius: 12,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    padding: 20,
+    paddingBottom: 100, // Extra padding for bottom tab
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
 });
