@@ -56,7 +56,7 @@ export const getTasks = async (req: Request, res: Response) => {
 
 // @desc    Get task by ID
 // @route   GET /api/tasks/:id
-// @access  Private/Worker
+// @access  Private/Talent
 export const getTaskById = async (req: Request, res: Response) => {
   try {
     const task = await Task.findById(req.params.id).populate(
@@ -75,7 +75,7 @@ export const getTaskById = async (req: Request, res: Response) => {
 
 // @desc    Get task by Skill ID
 // @route   GET /api/tasks/skill/:skillId
-// @access  Private/Worker
+// @access  Private/Talent
 export const getTaskBySkillId = async (req: Request, res: Response) => {
   try {
     const task = await Task.findOne({ skillId: req.params.skillId }).select(

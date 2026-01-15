@@ -60,7 +60,7 @@ function TalentDashboardContent() {
       if (!user) {
         router.push("/login?redirect=/dashboard/talent");
       } else if (user.role !== "talent" && user.role !== "admin") {
-        // Redirect if not worker
+        // Redirect if not talent
         if (user.role === "employer") router.push("/dashboard/employer");
         else if (user.role === "agent") router.push("/dashboard/agent");
       } else {

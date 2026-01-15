@@ -15,7 +15,7 @@ describe('Agent Endpoints', () => {
         });
         const agentCookie = agentRes.headers['set-cookie'] as unknown as string[];
 
-        // 2. Register Worker
+        // 2. Register Talent
         const talentRes = await request(app).post('/api/auth/register').send({
             name: 'Neo Talent',
             email: 'neo.flow@matrix.com',

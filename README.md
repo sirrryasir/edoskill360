@@ -1,10 +1,10 @@
 # Edoskill360
 
-Edoskill360 is a modern, high-performance freelance and task management platform built to bridge the gap between skilled professionals and employers. Unlike traditional platforms, Edoskill360 focuses on **Trust and Verification**, ensuring that every worker's identity and skills are validated through a multi-stage verification process.
+Edoskill360 is a modern, high-performance freelance and task management platform built to bridge the gap between skilled professionals and employers. Unlike traditional platforms, Edoskill360 focuses on **Trust and Verification**, ensuring that every talent's identity and skills are validated through a multi-stage verification process.
 
 ## 🌟 Key Features
 
-- **Multi-Role Ecosystem**: Tailored experiences for Workers, Employers, Agents, and Administrators.
+- **Multi-Role Ecosystem**: Tailored experiences for Talents, Employers, Agents, and Administrators.
 - **Trust Score System**: A dynamic ranking system that builds credibility based on verified credentials, completed tasks, and feedback.
 - **AI-Powered Verification**: Integrated AI validation for identity proof, skill assessment, and profile quality.
 - **Verification Pipeline**: 

@@ -35,7 +35,7 @@ export function TrustScoreCard({ score, role }: TrustScoreCardProps) {
               Trust Score
             </ThemedText>
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              {role === 'worker' ? 'Professional Capability' : 'Employer Reliability'}
+              {role === 'talent' ? 'Professional Capability' : 'Employer Reliability'}
             </ThemedText>
           </View>
         </View>
@@ -57,14 +57,14 @@ export function TrustScoreCard({ score, role }: TrustScoreCardProps) {
       </View>
 
       <View style={styles.barBackground}>
-        <View 
+        <View
           style={[
-            styles.barFill, 
-            { 
+            styles.barFill,
+            {
               width: `${score}%`,
-              backgroundColor: scoreColor 
+              backgroundColor: scoreColor
             }
-          ]} 
+          ]}
         />
       </View>
 

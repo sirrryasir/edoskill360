@@ -291,7 +291,7 @@ export default function Home() {
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600">
                   <Briefcase className="h-6 w-6" />
                 </div>
-                For Workers
+                For Talents
               </h3>
               <ul className="space-y-6">
                 {[

@@ -38,7 +38,7 @@ export default function PrivacyPage() {
                     <section>
                         <h2 className="text-xl font-bold text-gray-800 mb-2">4. Data Sharing</h2>
                         <p className="text-gray-600">
-                            We do not sell your personal data. We facilitate data sharing only between workers and employers as part of the hiring process you initiate.
+                            We do not sell your personal data. We facilitate data sharing only between talents and employers as part of the hiring process you initiate.
                         </p>
                     </section>
 

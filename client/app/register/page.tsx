@@ -37,7 +37,7 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
   }),
-  role: z.enum(["worker", "employer"]),
+  role: z.enum(["talent", "employer"]),
 });
 
 function RegisterForm() {
@@ -54,8 +54,8 @@ function RegisterForm() {
       name: "",
       email: "",
       password: "",
-      role: (roleParam === "employer" ? "employer" : "worker") as
-        | "worker"
+      role: (roleParam === "employer" ? "employer" : "talent") as
+        | "talent"
         | "employer",
     },
   });
@@ -63,8 +63,8 @@ function RegisterForm() {
   useEffect(() => {
     if (roleParam === "employer") {
       form.setValue("role", "employer");
-    } else if (roleParam === "worker") {
-      form.setValue("role", "worker");
+    } else if (roleParam === "talent") {
+      form.setValue("role", "talent");
     }
   }, [roleParam, form]);
 
@@ -95,7 +95,7 @@ function RegisterForm() {
       } else if (data.role === "employer") {
         router.push("/dashboard/employer");
       } else {
-        router.push("/dashboard/worker");
+        router.push("/dashboard/talent");
       }
     } catch (err: any) {
       setError(err.message);
@@ -194,8 +194,8 @@ function RegisterForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="worker">
-                      <span className="font-medium">Worker</span>{" "}
+                    <SelectItem value="talent">
+                      <span className="font-medium">Talent</span>{" "}
                       <span className="text-muted-foreground ml-2">
                         (Looking for jobs)
                       </span>

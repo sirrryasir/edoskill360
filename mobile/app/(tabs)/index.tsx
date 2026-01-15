@@ -34,29 +34,29 @@ export default function DashboardScreen() {
     // Basic mapping logic based on user.verificationStage
     // enum: STAGE_0_UNVERIFIED, STAGE_1_PROFILE_COMPLETED, STAGE_2_SKILLS_SUBMITTED, etc.
     if (!user) return 'locked';
-    
+
     // Identity Step (1)
     if (stepId === '1') return user.verificationStage !== 'STAGE_0_UNVERIFIED' ? 'completed' : 'current';
-    
+
     // Skills Step (2)
     if (stepId === '2') {
-        if (user.verificationStage === 'STAGE_0_UNVERIFIED') return 'locked';
-        if (user.verificationStage === 'STAGE_1_PROFILE_COMPLETED') return 'current';
-        return 'completed';
+      if (user.verificationStage === 'STAGE_0_UNVERIFIED') return 'locked';
+      if (user.verificationStage === 'STAGE_1_PROFILE_COMPLETED') return 'current';
+      return 'completed';
     }
 
     // Background/Interview Step (3)
     if (stepId === '3') {
-        if (user.verificationStage === 'STAGE_2_SKILLS_SUBMITTED') return 'current';
-        if (['STAGE_3_INTERVIEW_COMPLETED', 'STAGE_4_REFERENCES_PENDING', 'STAGE_5_VERIFIED'].includes(user.verificationStage || '')) return 'completed';
-        return 'locked';
+      if (user.verificationStage === 'STAGE_2_SKILLS_SUBMITTED') return 'current';
+      if (['STAGE_3_INTERVIEW_COMPLETED', 'STAGE_4_REFERENCES_PENDING', 'STAGE_5_VERIFIED'].includes(user.verificationStage || '')) return 'completed';
+      return 'locked';
     }
 
     // Vouched/Final Step (4)
     if (stepId === '4') {
-        if (user.verificationStage === 'STAGE_5_VERIFIED') return 'completed';
-        if (user.verificationStage === 'STAGE_4_REFERENCES_PENDING') return 'current';
-        return 'locked';
+      if (user.verificationStage === 'STAGE_5_VERIFIED') return 'completed';
+      if (user.verificationStage === 'STAGE_4_REFERENCES_PENDING') return 'current';
+      return 'locked';
     }
 
     return 'locked';
@@ -71,7 +71,7 @@ export default function DashboardScreen() {
 
   if (!user) return null;
 
-  const isWorker = user.role === 'talent' || user.role === 'worker'; // Handle both naming conventions
+  const isTalent = user.role === 'talent' || user.role === 'talent'; // Handle both naming conventions
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -79,9 +79,9 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
-              <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
-                  {user.name.charAt(0).toUpperCase()}
-              </ThemedText>
+            <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
+              {user.name.charAt(0).toUpperCase()}
+            </ThemedText>
           </View>
           <View>
             <ThemedText type="small" style={{ color: theme.textSecondary }}>Good Morning,</ThemedText>
@@ -108,23 +108,23 @@ export default function DashboardScreen() {
         {/* Action Grid */}
         <View style={styles.section}>
           <ThemedText type="headingM" style={{ marginBottom: 12 }}>
-            {isWorker ? 'Find Opportunities' : 'Manage Talent'}
+            {isTalent ? 'Find Opportunities' : 'Manage Talent'}
           </ThemedText>
-          
+
           <View style={styles.grid}>
-            <TouchableOpacity 
-              style={[styles.gridItem]} 
-              onPress={() => router.push(isWorker ? '/jobs' : '/(tabs)/freelancers')}
+            <TouchableOpacity
+              style={[styles.gridItem]}
+              onPress={() => router.push(isTalent ? '/jobs' : '/(tabs)/freelancers')}
             >
               <Card style={styles.actionCard} padding="md">
                 <View style={[styles.actionIcon, { backgroundColor: theme.primary + '15' }]}>
                   <Search size={24} color={theme.primary} />
                 </View>
                 <ThemedText type="defaultSemiBold">
-                  {isWorker ? 'Find Jobs' : 'Find Talent'}
+                  {isTalent ? 'Find Jobs' : 'Find Talent'}
                 </ThemedText>
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                  {isWorker ? 'Browse verified listings' : 'Hire verified pros'}
+                  {isTalent ? 'Browse verified listings' : 'Hire verified pros'}
                 </ThemedText>
               </Card>
             </TouchableOpacity>

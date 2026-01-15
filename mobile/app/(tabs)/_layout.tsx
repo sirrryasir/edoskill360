@@ -34,7 +34,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Jobs Tab - Visible for Everyone, but mainly Worker */}
+      {/* Jobs Tab - Visible for Everyone, but mainly Talent */}
       <Tabs.Screen
         name="jobs"
         options={{
@@ -49,20 +49,20 @@ export default function TabLayout() {
         name="Talents"
         options={{
           title: 'Talent',
-          href: user?.role === 'worker' ? null : '/Talents', // Hide for worker? Maybe keep visible for networking.
-          // Let's hide it for worker to match sidebar logic strictly, or keep it open. 
-          // Sidebar shows 'Find Jobs' for Worker, 'Find Talent' for Employer.
+          href: user?.role === 'talent' ? null : '/Talents', // Hide for talent? Maybe keep visible for networking.
+          // Let's hide it for talent to match sidebar logic strictly, or keep it open. 
+          // Sidebar shows 'Find Jobs' for Talent, 'Find Talent' for Employer.
           // Let's stick to sidebar logic to be safe.
           // Actually, sidebar logic:
-          // Worker: Dashboard, Jobs, Skills, Verification, Profile
+          // Talent: Dashboard, Jobs, Skills, Verification, Profile
           // Employer: Dashboard, Post Job, Find Talent
 
-          // So if user is worker, hide Talents tab?
+          // So if user is talent, hide Talents tab?
           // If user is employer, hide jobs tab?
 
           // Let's refine based on user role presence.
           // If user is null, we show default maybe?
-          // If user is worker -> Hide Talents
+          // If user is talent -> Hide Talents
           // If user is employer -> Hide Jobs (unless they want to see what's out there? Usually employers post jobs, not find them)
 
           href: user?.role === 'employer' ? '/Talents' : null,

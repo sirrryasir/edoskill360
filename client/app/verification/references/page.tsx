@@ -58,7 +58,7 @@ export default function ReferencesPage() {
                         Once they respond, our Agents will review and verify your work history.
                     </CardDescription>
                     <div className="mt-8">
-                        <Button onClick={() => router.push("/dashboard/worker?tab=verification")} size="lg">
+                        <Button onClick={() => router.push("/dashboard/talent?tab=verification")} size="lg">
                             Return to Dashboard
                         </Button>
                     </div>

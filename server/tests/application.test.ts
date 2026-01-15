@@ -52,7 +52,7 @@ describe('Job Application Endpoints', () => {
             expect(jobRes.statusCode).toEqual(201);
             const jobId = jobRes.body._id;
 
-            // 3. Worker Applies
+            // 3. Talent Applies
             const applyRes = await request(app)
                 .post('/api/applications')
                 .set('Cookie', talentCookie)

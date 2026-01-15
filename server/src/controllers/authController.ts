@@ -42,7 +42,7 @@ export const registerUser = async (req: Request, res: Response) => {
       name,
       email,
       password,
-      role: role || "worker",
+      role: role || "talent",
     });
 
     if (user) {

@@ -64,7 +64,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/dashboard/worker"
+                  href="/dashboard/talent"
                   className="hover:text-blue-400 transition-colors"
                 >
                   Take Skill Tests

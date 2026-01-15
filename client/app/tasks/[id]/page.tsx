@@ -184,7 +184,7 @@ export default function TaskPage({
               </div>
             )}
 
-            <Button onClick={() => router.push("/dashboard/worker?tab=verification")} className="w-full">
+            <Button onClick={() => router.push("/dashboard/talent?tab=verification")} className="w-full">
               Return to Verification
             </Button>
           </CardContent>

@@ -266,7 +266,7 @@ const seedData = async () => {
     console.log("------------------------------------------");
     console.log("🏅 Seeding User Skills & Exam History...");
 
-    // Ahmed (Worker 0) - Dev Skills
+    // Ahmed (Talent 0) - Dev Skills
     // 1. React (Verified with Exam History)
     await UserSkill.create({
       userId: talents[0]._id,
@@ -307,7 +307,7 @@ const seedData = async () => {
       verified: false,
     });
 
-    // Sarah (Worker 1) - Design Skills
+    // Sarah (Talent 1) - Design Skills
     // 1. Figma (Verified with Exam History)
     await UserSkill.create({
       userId: talents[1]._id,
@@ -333,13 +333,13 @@ const seedData = async () => {
       verified: true,
     });
 
-    // Mohamed (Worker 2) - Data Skills
+    // Mohamed (Talent 2) - Data Skills
     await UserSkill.create([
       { userId: talents[2]._id, skillId: skills[4]._id, score: 94, verified: true },
       { userId: talents[2]._id, skillId: skills[9]._id, score: 89, verified: true },
     ]);
 
-    // Khadra (Worker 3) - Marketing Skills
+    // Khadra (Talent 3) - Marketing Skills
     await UserSkill.create([
       { userId: talents[3]._id, skillId: skills[7]._id, score: 85, verified: true },
     ]);

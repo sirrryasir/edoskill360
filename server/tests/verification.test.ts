@@ -4,7 +4,7 @@ import app from '../src/app';
 describe('Verification Endpoints', () => {
 
     it('should handle identity verification flow', async () => {
-        // 1. Register Worker
+        // 1. Register Talent
         const talentRes = await request(app).post('/api/auth/register').send({
             name: 'Verify Talent',
             email: 'verify.flow@example.com',
@@ -42,7 +42,7 @@ describe('Verification Endpoints', () => {
     });
 
     it('should handle reference verification request', async () => {
-        // 1. Register Worker
+        // 1. Register Talent
         const talentRes = await request(app).post('/api/auth/register').send({
             name: 'Ref Talent',
             email: 'ref.flow@example.com',

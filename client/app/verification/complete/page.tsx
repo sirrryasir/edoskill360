@@ -77,7 +77,7 @@ export default function VerificationComplete() {
 
                 <CardContent>
                     <Button
-                        onClick={() => router.push("/dashboard/worker")}
+                        onClick={() => router.push("/dashboard/talent")}
                         className="w-full mt-4"
                         size="lg"
                         variant={success ? "default" : "secondary"}
