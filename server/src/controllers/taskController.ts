@@ -362,7 +362,7 @@ export const submitAIAssessment = async (req: any, res: Response) => {
           const User = (await import("../models/User")).default;
           await User.findByIdAndUpdate(req.user._id, {
             "verificationStatus.skills": "verified",
-            verificationStage: "SKILLS_EVALUATED"
+            verificationStage: "STAGE_3_INTERVIEW_COMPLETED"
           });
         }
       }

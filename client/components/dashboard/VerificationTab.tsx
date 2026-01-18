@@ -42,13 +42,37 @@ export default function VerificationTab() {
         const stage = status?.verificationStage || user?.verificationStage; // Prefer fresh status
         if (!stage) return 0;
 
+        // Map server enums to stepper index (0-3)
+        // 0: Identity Verification
+        // 1: Skill Assessment
+        // 2: Professional References
+        // 3: Full Verification (Completed)
         const stageMap: Record<string, number> = {
+            // Stage 0 & 1 -> Index 0 (Identity)
+            "STAGE_0_UNVERIFIED": 0,
+            "STAGE_1_PROFILE_COMPLETED": 0,
+
+            // Stage 2 -> Index 1 (Skills) - Identity is done
+            "STAGE_2_SKILLS_SUBMITTED": 1,
+
+            // Stage 3 -> Index 2 (References) - Skills are done
+            "STAGE_3_INTERVIEW_COMPLETED": 2,
+
+            // Stage 4+ -> Index 3 (Full Verification) - References done? 
+            // Wait, Stage 4 is "REFERENCES_PENDING". If we want to show References as "in progress" (index 2),
+            // then currentStageIdx should be 2.
+            // If References are DONE, we move to Stage 5.
+            "STAGE_4_REFERENCES_PENDING": 2,
+
+            "STAGE_5_VERIFIED": 4,
+
+            // Legacy fallbacks just in case
             "UNVERIFIED": 0,
             "PROFILE_COMPLETED": 0,
             "IDENTITY_SUBMITTED": 0,
             "IDENTITY_APPROVED": 1,
             "SKILLS_TESTING": 1,
-            "SKILLS_EVALUATED": 2, // Map to Skills section completion
+            "SKILLS_EVALUATED": 2,
             "AI_VALIDATION_PASSED": 2,
             "REFERENCES_PENDING": 2,
             "REFERENCES_VERIFIED": 3,

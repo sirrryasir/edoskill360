@@ -77,7 +77,7 @@ export const getTalents = async (req: Request, res: Response) => {
     }
 
     if (verified === "true") {
-      query.verificationStage = "VERIFIED";
+      query.verificationStage = "STAGE_5_VERIFIED";
     }
 
     const talents = await User.find(query).select("-password").sort({
