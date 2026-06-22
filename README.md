@@ -1,72 +1,161 @@
-# Edoskill360
+# 🎓 EdoSkill360 - Comprehensive Skills Development Platform
 
-Edoskill360 is a modern, high-performance freelance and task management platform built to bridge the gap between skilled professionals and employers. Unlike traditional platforms, Edoskill360 focuses on **Trust and Verification**, ensuring that every talent's identity and skills are validated through a multi-stage verification process.
+<div align="center">
+  <p>
+    <a href="https://github.com/sirrryasir/edoskill360"><img src="https://img.shields.io/badge/GitHub-EdoSkill360-black?style=flat-square&logo=github" alt="GitHub" /></a>
+    <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-20.x-339933?style=flat-square&logo=nodedotjs" alt="Node.js" /></a>
+    <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React" /></a>
+    <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript" alt="TypeScript" /></a>
+    <a href="https://www.docker.com"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker" alt="Docker" /></a>
+  </p>
+</div>
 
-## 🌟 Key Features
+---
 
-- **Multi-Role Ecosystem**: Tailored experiences for Talents, Employers, Agents, and Administrators.
-- **Trust Score System**: A dynamic ranking system that builds credibility based on verified credentials, completed tasks, and feedback.
-- **AI-Powered Verification**: Integrated AI validation for identity proof, skill assessment, and profile quality.
-- **Verification Pipeline**: 
-  - Identity Verification (ID/Passport)
-  - Skill Testing & Evaluation
-  - AI-Driven Background Validation
-  - Reference Checking
-- **Modern Dashboard**: Role-specific dashboards for managing jobs, applications, and verification progress.
-- **High Performance**: Powered by **Bun** for lightning-fast server-side execution.
+## 📌 Overview
+
+**EdoSkill360** is a full-stack skills development and professional learning platform. It provides students and professionals with structured courses, progress tracking, and skill assessment tools. Built with a modern tech stack including React, Node.js, and MongoDB, EdoSkill360 enables seamless learning experiences across web and mobile platforms.
+
+---
+
+## ✨ Key Features
+
+- **📚 Course Management**: Structured learning modules with video content, quizzes, and assignments
+- **📊 Progress Tracking**: Real-time dashboard showing learning progress and skill achievements
+- **🎯 Skill Assessment**: Automated testing and feedback on skill development
+- **📱 Multi-Platform**: Web portal + React Native mobile app for on-the-go learning
+- **👥 Community**: Peer interaction, forums, and mentorship features
+- **🔐 Secure Auth**: JWT-based authentication with role-based access control
+- **🚀 Scalable**: Docker-ready for cloud deployment
+
+---
 
 ## 🛠️ Tech Stack
 
-### Frontend (Client)
-- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & [Shadcn/UI](https://ui.shadcn.com/)
-- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
-- **Form Handling**: React Hook Form & Zod
-- **Icons**: Lucide React
+| Component | Technology |
+|-----------|------------|
+| **Frontend** | React 19, TypeScript, TailwindCSS |
+| **Backend** | Node.js, Express.js |
+| **Mobile** | React Native, Expo |
+| **Database** | MongoDB |
+| **DevOps** | Docker, Docker Compose |
 
-### Backend (Server)
-- **Runtime**: [Bun](https://bun.sh/)
-- **Framework**: [Express.js](https://expressjs.com/)
-- **Database**: [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
-- **Authentication**: JWT (JSON Web Tokens) & Bcrypt for password hashing
-- **Testing**: Jest & Supertest
+---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- [Bun](https://bun.sh/) installed (`curl -fsSL https://bun.sh/install | bash`)
-- MongoDB (Local or Atlas)
+- Node.js 20.x or higher
+- Docker & Docker Compose (recommended)
+- MongoDB instance
 
-### Installation
+### Option 1: Docker (Recommended)
+```bash
+git clone https://github.com/sirrryasir/edoskill360.git
+cd edoskill360
+docker-compose up --build
+```
 
-1. **Clone the repository:**
+### Option 2: Local Development
+
+**1. Backend Setup**
+```bash
+cd server
+npm install
+# Create .env file with MongoDB connection
+npm run dev
+```
+
+**2. Frontend Setup**
+```bash
+cd ../client
+npm install
+npm run dev
+```
+
+**3. Mobile Setup**
+```bash
+cd ../mobile
+npm install
+npx expo start
+```
+
+---
+
+## 📁 Project Structure
+
+```
+edoskill360/
+├── client/          # React web application
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── server/          # Node.js backend API
+│   ├── src/
+│   ├── models/
+│   └── routes/
+├── mobile/          # React Native mobile app
+│   ├── src/
+│   └── app.json
+└── docker-compose.yml
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository**
    ```bash
-   git clone https://github.com/your-username/edoskill360.git
+   git clone https://github.com/sirrryasir/edoskill360.git
    cd edoskill360
    ```
 
-2. **Setup Server:**
+2. **Create a feature branch**
    ```bash
-   cd server
-   bun install
-   cp .env.example .env
-   # Update MONGO_URI and JWT_SECRET in .env
-   bun run dev
+   git checkout -b feature/your-feature-name
    ```
 
-3. **Setup Client:**
+3. **Make your changes** and commit
    ```bash
-   cd client
-   bun install
-   bun run dev
+   git commit -m "feat: add your feature description"
    ```
 
-## 📂 Project Structure
+4. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-- `/client`: Next.js frontend application.
-- `/server`: Express.js backend API.
-- `/server/src/models`: Database schemas (User, Job, Task, Verification, etc.).
-- `/server/src/controllers`: Business logic for each resource.
-- `/server/src/routes`: API endpoints.
+5. **Open a Pull Request** with a clear description
+
+### Development Guidelines
+- Use TypeScript for type safety
+- Follow existing code style
+- Write meaningful commit messages
+- Test your changes before submitting PR
+
 ---
-Built with ❤️ by [Yasir](https://yaasir.dev)
+
+## 📄 License
+
+MIT License. See `LICENSE` file for details.
+
+---
+
+## 👨‍💻 Author
+
+Built by **Yasir Hassan** ([@sirrryasir](https://github.com/sirrryasir))  
+Portfolio: [yaasir.dev](https://www.yaasir.dev)
+
+---
+
+## 📞 Support
+
+- 📧 Email: Contact via GitHub
+- 🐛 Issues: [GitHub Issues](https://github.com/sirrryasir/edoskill360/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/sirrryasir/edoskill360/discussions)
+
+---
+
+**Star this project if you find it useful!** ⭐
