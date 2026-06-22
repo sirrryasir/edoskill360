@@ -1,161 +1,104 @@
-# 🎓 EdoSkill360 - Comprehensive Skills Development Platform
+# EdoSkill360 - Talent Verification and Job Matching Platform
 
-<div align="center">
-  <p>
-    <a href="https://github.com/sirrryasir/edoskill360"><img src="https://img.shields.io/badge/GitHub-EdoSkill360-black?style=flat-square&logo=github" alt="GitHub" /></a>
-    <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-20.x-339933?style=flat-square&logo=nodedotjs" alt="Node.js" /></a>
-    <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React" /></a>
-    <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript" alt="TypeScript" /></a>
-    <a href="https://www.docker.com"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker" alt="Docker" /></a>
-  </p>
-</div>
+Platform for verifying professional skills through task-based assessments and matching talent with employers.
 
----
+## What It Does
 
-## 📌 Overview
+EdoSkill360 connects talents with employers through a trust-based verification system. Talents prove their skills by completing tasks (quizzes, coding challenges, file submissions). Employers post jobs and browse verified talent profiles.
 
-**EdoSkill360** is a full-stack skills development and professional learning platform. It provides students and professionals with structured courses, progress tracking, and skill assessment tools. Built with a modern tech stack including React, Node.js, and MongoDB, EdoSkill360 enables seamless learning experiences across web and mobile platforms.
+## Core Features
 
----
+Skills Verification:
+- Multi-stage verification process (6 stages from unverified to verified)
+- Tasks per skill: quizzes, file uploads, text submissions, links
+- Difficulty levels: easy, medium, hard
+- AI-generated tasks using Google Gemini
+- Trust score system based on identity, skills, interview, and references
 
-## ✨ Key Features
+Talent System:
+- Talent profiles with headline, bio, location
+- Trust score (0-100) with breakdown
+- Role: talent, employer, admin, agent
+- Verification stages tracked
 
-- **📚 Course Management**: Structured learning modules with video content, quizzes, and assignments
-- **📊 Progress Tracking**: Real-time dashboard showing learning progress and skill achievements
-- **🎯 Skill Assessment**: Automated testing and feedback on skill development
-- **📱 Multi-Platform**: Web portal + React Native mobile app for on-the-go learning
-- **👥 Community**: Peer interaction, forums, and mentorship features
-- **🔐 Secure Auth**: JWT-based authentication with role-based access control
-- **🚀 Scalable**: Docker-ready for cloud deployment
+Job Management:
+- Employers post jobs with skill requirements
+- Full-time, part-time, contract, freelance options
+- Job status: open, closed
+- Salary ranges
 
----
+Task Types:
+- Quiz with multiple choice questions
+- File submission with scoring
+- Text submission
+- Link submission
+- Static or AI-generated tasks
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| **Frontend** | React 19, TypeScript, TailwindCSS |
-| **Backend** | Node.js, Express.js |
-| **Mobile** | React Native, Expo |
-| **Database** | MongoDB |
-| **DevOps** | Docker, Docker Compose |
+Backend:
+- Node.js + Express.js
+- TypeScript
+- MongoDB with Mongoose ORM
+- Google Generative AI (Gemini for AI-generated tasks)
+- Authentication: JWT + bcrypt
+- Prisma (in mobile)
 
----
+Frontend:
+- React
+- Client and mobile apps
+- Role-based access control
 
-## 🚀 Quick Start
+Database:
+- MongoDB with Mongoose
+- Models: User, Job, Task, TaskResult, Skill, Verification, Application, Feedback, etc.
 
-### Prerequisites
-- Node.js 20.x or higher
-- Docker & Docker Compose (recommended)
-- MongoDB instance
+## Models
 
-### Option 1: Docker (Recommended)
-```bash
-git clone https://github.com/sirrryasir/edoskill360.git
-cd edoskill360
-docker-compose up --build
-```
+User (with verification stages):
+- STAGE_0_UNVERIFIED
+- STAGE_1_PROFILE_COMPLETED
+- STAGE_2_SKILLS_SUBMITTED
+- STAGE_3_INTERVIEW_COMPLETED
+- STAGE_4_REFERENCES_PENDING
+- STAGE_5_VERIFIED
+- REJECTED
 
-### Option 2: Local Development
+Job:
+- title, description
+- requirements (skills array)
+- salary range, location
+- job type, status
 
-**1. Backend Setup**
+Task:
+- skill-based
+- quiz/file/text/link submission types
+- difficulty levels
+- max score, time limit
+
+## Installation
+
+Backend:
 ```bash
 cd server
 npm install
-# Create .env file with MongoDB connection
 npm run dev
 ```
 
-**2. Frontend Setup**
+Client:
 ```bash
-cd ../client
+cd client
 npm install
 npm run dev
 ```
 
-**3. Mobile Setup**
+Mobile:
 ```bash
-cd ../mobile
+cd mobile
 npm install
-npx expo start
+npm run dev
 ```
 
----
+## License
 
-## 📁 Project Structure
-
-```
-edoskill360/
-├── client/          # React web application
-│   ├── src/
-│   ├── public/
-│   └── package.json
-├── server/          # Node.js backend API
-│   ├── src/
-│   ├── models/
-│   └── routes/
-├── mobile/          # React Native mobile app
-│   ├── src/
-│   └── app.json
-└── docker-compose.yml
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork the repository**
-   ```bash
-   git clone https://github.com/sirrryasir/edoskill360.git
-   cd edoskill360
-   ```
-
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-3. **Make your changes** and commit
-   ```bash
-   git commit -m "feat: add your feature description"
-   ```
-
-4. **Push to your fork**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. **Open a Pull Request** with a clear description
-
-### Development Guidelines
-- Use TypeScript for type safety
-- Follow existing code style
-- Write meaningful commit messages
-- Test your changes before submitting PR
-
----
-
-## 📄 License
-
-MIT License. See `LICENSE` file for details.
-
----
-
-## 👨‍💻 Author
-
-Built by **Yasir Hassan** ([@sirrryasir](https://github.com/sirrryasir))  
-Portfolio: [yaasir.dev](https://www.yaasir.dev)
-
----
-
-## 📞 Support
-
-- 📧 Email: Contact via GitHub
-- 🐛 Issues: [GitHub Issues](https://github.com/sirrryasir/edoskill360/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/sirrryasir/edoskill360/discussions)
-
----
-
-**Star this project if you find it useful!** ⭐
+MIT
